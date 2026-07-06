@@ -29,9 +29,17 @@ body.hi-res-peek-live #pano { pointer-events: none; }
 #crosshair::after { left: 14px; top: 0; width: 2px; height: 30px; }
 
 #compassContainer {
-  position: absolute; top: 62px; right: 14px; display: flex; flex-direction: column; align-items: flex-end;
-  gap: 6px; z-index: 100;
-  transition: opacity 0.5s ease; opacity: 0; pointer-events: none;
+  position: absolute;
+  top: env(safe-area-inset-top, 0px);
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  z-index: 100;
+  transition: opacity 0.5s ease;
+  opacity: 0;
+  pointer-events: none;
 }
 #compassContainer.visible { opacity: 1; pointer-events: auto; }
 
@@ -160,8 +168,8 @@ body.hi-res-peek-live #pano { pointer-events: none; }
 .heading-adjust-bar {
   display: none;
   position: absolute;
-  bottom: 105px;
-  right: 108px;
+  bottom: 228px;
+  right: 100px;
   z-index: 101;
   flex-direction: row;
   align-items: center;
@@ -241,11 +249,12 @@ body.hi-res-peek-live #pano { pointer-events: none; }
 }
 #degreeCircle small { display: none; }
 
-/* ジャイロ（スマホ・iPad・右上・他UIと同様に自動消灯） */
+/* ジャイロ（地図と重ならないよう左上） */
 #gyroButton {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  left: 10px;
+  right: auto;
   width: 40px;
   height: 40px;
   border: none;
@@ -291,17 +300,14 @@ body.hi-res-peek-live #pano { pointer-events: none; }
     font-size: 11px;
     letter-spacing: -0.95px;
   }
-  #compassContainer {
-    top: 54px;
-  }
   /* 黄色矢印：右へ丸1つ分・下矢印をMap丸と同じ高さに */
   #arrowUp { bottom: 140px; right: 60px; }
   #arrowDown { bottom: 30px; right: 60px; }
   #arrowLeft { bottom: 85px; right: 125px; }
   #arrowRight { bottom: 85px; right: 8px; }
   .heading-adjust-bar {
-    bottom: 85px;
-    right: 48px;
+    bottom: 208px;
+    right: 40px;
   }
 }
 body.gyro-active #pano { touch-action: none; }
