@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>取説・編集</title>
+<HTA:APPLICATION
+  id="helpEditApp"
+  applicationname="取説編集"
+  border="thick"
+  borderstyle="normal"
+  caption="yes"
+  maximize="yes"
+  minimize="yes"
+  showintaskbar="yes"
+  singleinstance="yes"
+  sysmenu="yes"
+  scroll="yes"
+/>
+<script src="../data.js"></script>
+<script src="help.js"></script>
+<script src="config.js"></script>
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; font-family: "Meiryo", sans-serif; background: #111; color: #eee; }
+.bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  padding: 10px 14px; background: #222; border-bottom: 2px solid #ffe26a;
+  position: sticky; top: 0; z-index: 10;
+}
+.bar h1 { margin: 0; font-size: 18px; color: #ffe26a; }
+.bar button {
+  border: 0; border-radius: 8px; padding: 8px 16px; font-weight: bold;
+  cursor: pointer; background: #ffe26a; color: #111; font-size: 14px;
+}
+.bar button.sub { background: #555; color: #fff; }
+#status { font-size: 13px; color: #9fd89f; max-width: 100%; word-break: break-all; }
+#status.err { color: #ffb4b4; }
+.layout { display: grid; grid-template-columns: 1fr 1fr; height: calc(100vh - 52px); }
+.edit-pane { overflow: auto; padding: 14px; border-right: 1px solid #333; background: #151515; }
+.preview-pane { overflow: auto; padding: 0; background: #1a1a1a; }
+.item { border: 1px solid #444; border-radius: 10px; padding: 12px; margin: 10px 0; background: #1c1c1c; }
+.item-label { color: #ffe26a; font-size: 12px; margin-bottom: 8px; }
+label { display: block; color: #aaa; font-size: 12px; margin: 6px 0 4px; }
+input, textarea {
+  width: 100%; background: #0d0d0d; color: #fff; border: 1px solid #555;
+  border-radius: 6px; padding: 8px; font-family: inherit; font-size: 14px;
+}
+textarea { min-height: 72px; resize: vertical; }
+.hint { color: #888; font-size: 12px; line-height: 1.6; margin: 0 0 12px; }
+.preview-pane .wrap { max-width: 860px; margin: 0 auto; padding: 20px 14px 40px; }
+.preview-pane body, .preview-pane { color: #f8f8f8; line-height: 1.7; }
+.preview-pane .top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.preview-pane h1 { font-size: 24px; margin: 0; color: #66e8ff; }
+.preview-pane .back { margin-left: auto; color: #111; background: #ffe26a; text-decoration: none; font-weight: bold; padding: 8px 14px; border-radius: 999px; }
+.preview-pane .card { background: #242424; border: 1px solid #444; border-radius: 14px; padding: 16px; margin: 12px 0; }
+.preview-pane .step { display: grid; grid-template-columns: 80px 1fr; gap: 14px; align-items: center; }
+.preview-pane .step-mark { display: flex; align-items: center; justify-content: center; min-height: 56px; }
+.preview-pane .step-text strong { color: #ffe26a; }
+.preview-pane .step-text { color: #d8d8d8; }
+.preview-pane .small { color: #aaa; font-size: 13px; margin-top: 18px; white-space: pre-line; }
+.preview-pane .tip { color: #d8d8d8; font-size: 14px; }
+.preview-pane .card strong { color: #ffe26a; }
+.preview-pane .step-mark img { max-width: 70px; max-height: 70px; }
+.preview-pane .help-map-pin { width: 36px; height: 36px; border: 3px solid #fff; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: #e8453c; display: flex; justify-content: center; align-items: center; }
+.preview-pane .help-map-pin-num { transform: rotate(45deg); font-size: 14px; font-weight: bold; color: #fff; }
+.preview-pane .step-mark--gyro span { display: flex; width: 48px; height: 48px; border-radius: 50%; background: rgba(48,108,210,0.92); color: #fff; font-size: 10px; font-weight: bold; align-items: center; justify-content: center; }
+.preview-pane .step-mark--counter span { display: flex; width: 48px; height: 48px; border-radius: 50%; background: #fff; border: 3px solid #ff0000; color: #0066ff; font-size: 22px; font-weight: bold; align-items: center; justify-content: center; }
+.preview-pane .step-mark--look { font-size: 40px; }
+.preview-pane .step-mark--magnifier svg { width: 52px; height: 52px; }
+.preview-pane .step-mark--magnifier.color-pink { color: #ff4da6; }
+.layout { grid-template-columns: 1fr; }
+.edit-pane { display: none; }
+.preview-pane { overflow: auto; }
+.preview-pane .card.step { cursor: pointer; }
+.preview-pane .card.step:hover { outline: 2px solid rgba(255,226,106,0.65); }
+
+#quickEditor {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  background: rgba(20,20,20,0.98);
+  border-top: 2px solid #ffe26a;
+  padding: 10px 14px 14px;
+  display: none;
+}
+#quickEditor .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+#quickEditor .cap { color: #ffe26a; font-weight: bold; font-size: 13px; }
+#quickEditor input, #quickEditor textarea { background: #0d0d0d; border: 1px solid #555; color: #fff; border-radius: 6px; padding: 8px; font-size: 14px; }
+#quickEditor input { flex: 1 1 260px; }
+#quickEditor textarea { width: 100%; min-height: 72px; }
+#quickEditor .btns { margin-left: auto; display: flex; gap: 8px; }
+#quickEditor button { border: 0; border-radius: 8px; padding: 8px 16px; font-weight: bold; cursor: pointer; background: #ffe26a; color: #111; font-size: 14px; }
+#quickEditor button.sub { background: #555; color: #fff; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <h1>取説（使い方）の編集</h1>
+  <button type="button" onclick="saveConfig()">保存</button>
+  <button type="button" class="sub" onclick="openPublicPage()">公開ページを見る</button>
+  <span id="status"></span>
+</div>
+<div class="layout">
+  <div class="edit-pane">
+    <p class="hint">左で直すと右のプレビューが変わります。<br>「保存」で <strong id="savePath"></strong> に書き込みます。<br>保存後「公開ページを見る」で確認できます。</p>
+    <label>戻るボタンの文字</label>
+    <input id="backLabel" oninput="onEdit()">
+    <label>最後の注意書き</label>
+    <textarea id="footer" oninput="onEdit()"></textarea>
+    <div id="stepsEditor"></div>
+  </div>
+  <div class="preview-pane">
+    <div class="wrap" id="previewRoot">
+      <div class="top">
+        <h1 data-help-title></h1>
+        <a class="back" data-help-back href="#">地図に戻る</a>
+      </div>
+      <div data-help-steps></div>
+      <div data-help-notes></div>
+      <div data-help-gps></div>
+      <div class="small" data-help-footer></div>
+    </div>
+  </div>
+</div>
+<div id="quickEditor">
+  <div class="row">
+    <span class="cap">プレビューをクリックして編集</span>
+    <span id="qeId" style="color:#aaa;font-size:12px;"></span>
+    <div class="btns">
+      <button type="button" class="sub" onclick="closeQuickEditor()">閉じる</button>
+    </div>
+  </div>
+  <label style="margin-top:8px;">見出し</label>
+  <input id="qeTitle" oninput="onQuickEdit()">
+  <label>本文</label>
+  <textarea id="qeBody" oninput="onQuickEdit()"></textarea>
+</div>
+<script>
+var state = { backLabel: '', footer: '', steps: [] };
+var qeIndex = -1;
+
+function setStatus(msg, err) {
+  var el = document.getElementById('status');
+  el.textContent = msg || '';
+  el.className = err ? 'err' : '';
+}
+
+function getBaseDir() {
+  var p = decodeURIComponent(location.pathname || '');
+  if (p.charAt(0) === '/') p = p.substring(1);
+  p = p.replace(/\//g, '\\');
+  var i = p.lastIndexOf('\\');
+  return (i >= 0 ? p.substring(0, i + 1) : '');
+}
+
+function getConfigPath() {
+  return getBaseDir() + 'config.js';
+}
+
+function writeUtf8File(path, text) {
+  var stream = new ActiveXObject('ADODB.Stream');
+  stream.Type = 2;
+  stream.Charset = 'utf-8';
+  stream.Open();
+  stream.WriteText(text);
+  stream.SaveToFile(path, 2);
+  stream.Close();
+}
+
+function openPublicPage() {
+  var shell = new ActiveXObject('WScript.Shell');
+  shell.Run('"' + getBaseDir() + '使い方.html"', 1, false);
+}
+
+function reloadConfig(cb) {
+  var old = document.getElementById('cfgScript');
+  if (old && old.parentNode) old.parentNode.removeChild(old);
+  window.HELP_USER = undefined;
+  var s = document.createElement('script');
+  s.id = 'cfgScript';
+  s.src = 'config.js?t=' + (new Date().getTime());
+  s.onload = function() { if (cb) cb(); };
+  document.head.appendChild(s);
+}
+
+function loadState() {
+  if (typeof HelpEngine === 'undefined') {
+    setStatus('読み込みエラー', true);
+    return;
+  }
+  document.getElementById('savePath').textContent = getConfigPath();
+  var cfg = HelpEngine.buildHelpConfig(window.APP_DATA || {}, window.HELP_USER || {});
+  state.backLabel = cfg.backLabel || '地図に戻る';
+  state.footer = cfg.footer || '';
+  state.steps = (cfg.steps || []).map(function(s) {
+    return { id: s.id, title: s.title || '', body: s.body || '' };
+  });
+  document.getElementById('backLabel').value = state.backLabel;
+  document.getElementById('footer').value = state.footer;
+  renderPreview();
+}
+
+function renderEditors() {
+  document.getElementById('stepsEditor').innerHTML = state.steps.map(function(step, i) {
+    return '<div class="item">' +
+      '<div class="item-label">' + esc(step.id || ('項目' + (i + 1))) + '</div>' +
+      '<label>見出し</label>' +
+      '<input value="' + escAttr(step.title) + '" oninput="updateStep(' + i + ',\'title\',this.value)">' +
+      '<label>本文</label>' +
+      '<textarea oninput="updateStep(' + i + ',\'body\',this.value)">' + esc(step.body) + '</textarea>' +
+      '</div>';
+  }).join('');
+}
+
+function updateStep(i, key, val) {
+  state.steps[i][key] = val;
+  renderPreview();
+}
+
+function onEdit() {
+  state.backLabel = document.getElementById('backLabel').value;
+  state.footer = document.getElementById('footer').value;
+  renderPreview();
+}
+
+function renderPreview() {
+  var texts = {};
+  state.steps.forEach(function(s) {
+    if (s.id) texts[s.id] = { title: s.title, body: s.body };
+  });
+  var userCfg = {
+    backLabel: state.backLabel,
+    backHref: '../map.html',
+    texts: texts,
+    footer: state.footer
+  };
+  var cfg = HelpEngine.buildHelpConfig(window.APP_DATA || {}, userCfg);
+  HelpEngine.renderHelpPage(document.getElementById('previewRoot'), cfg);
+  bindPreviewEditing();
+}
+
+function bindPreviewEditing() {
+  var root = document.getElementById('previewRoot');
+  if (!root) return;
+  var cards = root.querySelectorAll('.card.step');
+  for (var i = 0; i < cards.length; i++) {
+    (function(card, idx) {
+      if (card._qeBound) return;
+      card._qeBound = true;
+      card.addEventListener('click', function() {
+        openQuickEditor(idx);
+      });
+    })(cards[i], i);
+  }
+}
+
+function openQuickEditor(stepCardIndex) {
+  var steps = state.steps || [];
+  if (!steps.length) return;
+  if (stepCardIndex < 0 || stepCardIndex >= steps.length) return;
+  qeIndex = stepCardIndex;
+  var s = steps[qeIndex];
+  var qe = document.getElementById('quickEditor');
+  document.getElementById('qeId').textContent = (s && s.id) ? ('[' + s.id + ']') : '';
+  document.getElementById('qeTitle').value = (s && s.title) ? s.title : '';
+  document.getElementById('qeBody').value = (s && s.body) ? s.body : '';
+  qe.style.display = 'block';
+}
+
+function closeQuickEditor() {
+  qeIndex = -1;
+  var qe = document.getElementById('quickEditor');
+  qe.style.display = 'none';
+}
+
+function onQuickEdit() {
+  if (qeIndex < 0) return;
+  var s = state.steps[qeIndex];
+  if (!s) return;
+  s.title = document.getElementById('qeTitle').value;
+  s.body = document.getElementById('qeBody').value;
+  renderPreview();
+}
+
+function buildConfigText() {
+  var texts = {};
+  state.steps.forEach(function(s) {
+    if (s.id) texts[s.id] = { title: s.title || '', body: s.body || '' };
+  });
+  var userCfg = {
+    backLabel: state.backLabel,
+    backHref: '../map.html',
+    texts: texts,
+    footer: state.footer
+  };
+  return '// 「？使い方」の文章\nwindow.HELP_USER = ' + JSON.stringify(userCfg, null, 2) + ';\n';
+}
+
+function saveConfig() {
+  var text = buildConfigText();
+  var path = getConfigPath();
+  setStatus('保存中…');
+  try {
+    writeUtf8File(path, text);
+    reloadConfig(function() { loadState(); });
+    setStatus('保存しました → ' + path);
+  } catch (e) {
+    setStatus('保存できませんでした', true);
+  }
+}
+
+function esc(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, function(c) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+  });
+}
+function escAttr(v) { return esc(v).replace(/"/g, '&quot;'); }
+
+loadState();
+</script>
+</body>
+</html>

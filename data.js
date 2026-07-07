@@ -115,7 +115,36 @@ var APP_DATA = {
       "course": "aa",
       "heading": 219,
       "lat": 30.8651,
-      "lng": 7.7309
+      "lng": 7.7309,
+      "videoHotspots": [
+        {
+          "src": "泥んこ.png",
+          "yaw": 14.2,
+          "pitch": 23.5,
+          "width": 400,
+          "height": 543,
+          "radius": 850,
+          "fade": 0,
+          "fadeBottom": 10,
+          "edgeFade": 0,
+          "fullscreen": false,
+          "objectFit": "contain",
+          "objectPositionY": 50,
+          "tone": {
+            "brightness": 1.1,
+            "contrast": 1.12,
+            "saturate": 0.88
+          },
+          "loop": false,
+          "fadeInMs": 800,
+          "fadeOutMs": 800,
+          "playDurationMs": 6000,
+          "mediaType": "image",
+          "autoplay": false,
+          "playOnView": false,
+          "footShadow": false
+        }
+      ]
     },
     {
       "id": "3-aa004",
@@ -154,7 +183,39 @@ var APP_DATA = {
       "course": "aa",
       "heading": 150,
       "lat": 32.5544,
-      "lng": 11.245
+      "lng": 11.245,
+      "videoHotspots": [
+        {
+          "src": "アヒル.png",
+          "yaw": -44.6,
+          "pitch": 26.3,
+          "width": 454,
+          "height": 616,
+          "radius": 850,
+          "fade": 0,
+          "fadeBottom": 17,
+          "edgeFade": 0,
+          "fullscreen": false,
+          "objectFit": "contain",
+          "objectPositionY": 100,
+          "tone": {
+            "brightness": 1.1,
+            "contrast": 1.12,
+            "saturate": 0.88
+          },
+          "loop": false,
+          "fadeInMs": 800,
+          "fadeOutMs": 800,
+          "playDurationMs": 6000,
+          "mediaType": "image",
+          "autoplay": false,
+          "playOnView": false,
+          "footShadow": false,
+          "canvasBlackKey": true,
+          "blackKeyThreshold": 18,
+          "blackKeySoft": 24
+        }
+      ]
     },
     {
       "id": "4-aa005",
@@ -232,7 +293,36 @@ var APP_DATA = {
       "course": "aa",
       "heading": 121,
       "lat": 39.6072,
-      "lng": 30.9488
+      "lng": 30.9488,
+      "hiResPeeks": [
+        {
+          "imageSrc": "aa006eos.png",
+          "layerSrcs": [
+            "aa006-0001.png",
+            "aa006-0002.png",
+            "aa006-0003.png",
+            "aa006-0004.png"
+          ],
+          "yawCenter": 12.3,
+          "pitchCenter": 7.9,
+          "frameRadius": 900,
+          "rangeAngleYaw": 22,
+          "rangeAnglePitch": 14,
+          "showAngleYaw": 12,
+          "showAnglePitch": 9,
+          "shootMode": "macro",
+          "maskType": "softEllipse",
+          "maskStrength": 65,
+          "magnifierColor": "gold",
+          "autoZoom": true,
+          "autoZoomMs": 10000,
+          "autoZoomFit": "height",
+          "frameWidth": 350,
+          "frameHeight": 221,
+          "layerAutoHoldMs": 1200,
+          "layerAutoBlendMs": 2000
+        }
+      ]
     },
     {
       "id": "6-aa007",
@@ -817,7 +907,36 @@ var APP_DATA = {
       "course": "aa",
       "heading": 114,
       "lat": 42.3524,
-      "lng": 86.7972
+      "lng": 86.7972,
+      "videoHotspots": [
+        {
+          "src": "video/owl.webm",
+          "yaw": -12.6,
+          "pitch": 30.3,
+          "width": 220,
+          "height": 297,
+          "radius": 850,
+          "fade": 0,
+          "fadeBottom": 10,
+          "fullscreen": false,
+          "objectFit": "contain",
+          "objectPositionY": 50,
+          "tone": {
+            "brightness": 0.9,
+            "contrast": 1,
+            "saturate": 0.88
+          },
+          "loop": false,
+          "fadeInMs": 800,
+          "fadeOutMs": 800,
+          "playDurationMs": 12000,
+          "autoplay": true,
+          "playOnView": false,
+          "srcIos": "video/guide_alpha_ios.mp4",
+          "srcHevc": "video/owl-ipad.mp4",
+          "footShadow": false
+        }
+      ]
     }
   ],
   "name": "Local 1024tiles",
