@@ -939,6 +939,132 @@ var APP_DATA = {
           "footShadow": false
         }
       ]
+    },
+    {
+      "id": "4-bb001",
+      "name": "bb001",
+      "levels": [
+        {
+          "tileSize": 256,
+          "size": 256,
+          "fallbackOnly": true
+        },
+        {
+          "tileSize": 512,
+          "size": 512
+        },
+        {
+          "tileSize": 1024,
+          "size": 1024
+        }
+      ],
+      "faceSize": 1536,
+      "initialViewParameters": {
+        "yaw": 0,
+        "pitch": 0,
+        "fov": 1.1479251634083179
+      },
+      "linkHotspots": [
+        {
+          "yaw": 0,
+          "pitch": 0,
+          "rotation": 0,
+          "target": "4-bb001"
+        }
+      ],
+      "infoHotspots": [
+        {
+          "yaw": 0.74,
+          "pitch": 1.45,
+          "rotation": 0,
+          "title": "ここは霊山の第2展望台 !!  虫眼鏡でキンランのアップ　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　になります。　VRボタンで戻ります。",
+          "text": "ここは霊山の第2展望台 !!  虫眼鏡でキンランのアップ　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　になります。　VRボタンで戻ります。",
+          "style": {
+            "fontSize": "15px",
+            "fontFamily": "'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3',sans-serif",
+            "color": "#ffffff"
+          }
+        }
+      ],
+      "position": 1,
+      "course": "bb",
+      "hiResPeeks": [
+        {
+          "imageSrc": "bb001-1eos.jpg",
+          "yawCenter": -30.1,
+          "pitchCenter": 43.7,
+          "frameWidth": 80,
+          "frameHeight": 63,
+          "frameRadius": 900,
+          "rangeAngleYaw": 4,
+          "rangeAnglePitch": 4,
+          "showAngleYaw": 27,
+          "showAnglePitch": 30,
+          "shootMode": "macro",
+          "maskType": "softEllipse",
+          "maskStrength": 85,
+          "magnifierColor": "gold",
+          "autoZoom": false,
+          "autoZoomMs": 8000,
+          "autoZoomFit": "height",
+          "peekBgm": "4-bb001a.mp3",
+          "peekBgmLoop": false
+        },
+        {
+          "imageSrc": "bb001-2eos.png",
+          "yawCenter": -7.7,
+          "pitchCenter": 57,
+          "frameRadius": 900,
+          "rangeAngleYaw": 4,
+          "rangeAnglePitch": 4,
+          "showAngleYaw": 9,
+          "showAnglePitch": 16,
+          "shootMode": "macro",
+          "maskType": "softEllipse",
+          "maskStrength": 65,
+          "magnifierColor": "pink",
+          "autoZoom": true,
+          "autoZoomFit": "height",
+          "frameWidth": 80,
+          "frameHeight": 63,
+          "autoZoomMs": 5000,
+          "peekBgm": "4-bb001a.mp3",
+          "peekBgmLoop": false
+        }
+      ],
+      "imageHotspots": [
+        {
+          "sceneStartId": "4-bb001",
+          "sourceScene": "4-bb001",
+          "src": "portal_288x214.png",
+          "width": 350,
+          "height": 350,
+          "yawCenter": 180,
+          "yawRange": 30,
+          "targetScene": "0-aa001",
+          "targetYaw": 0,
+          "targetPitch": 0,
+          "fadeTime": 5,
+          "dispTime": 10000,
+          "startHoldTime": 1000,
+          "effect": "growHalf",
+          "resetDisplay": false,
+          "pitchCenter": 5,
+          "pitchRange": 35
+        }
+      ],
+      "spatialAudio": {
+        "sources": [
+          {
+            "file": "4-bb001.mp3",
+            "label": "音源",
+            "yawDeg": 0,
+            "pitchDeg": 0,
+            "minVolume": 0.5,
+            "falloffDeg": 65
+          }
+        ]
+      }
     }
   ],
   "name": "Local 1024tiles",
@@ -951,6 +1077,10 @@ var APP_DATA = {
   "courseBgm": {
     "aa": {
       "file": "aa.mp3",
+      "loop": true
+    },
+    "bb": {
+      "file": "bb.mp3",
       "loop": true
     }
   },

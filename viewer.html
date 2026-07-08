@@ -7563,7 +7563,14 @@ function switchScene(sceneId, yaw, pitch, fov, fromPortalHotspot, keepFullscreen
   if (window.sceneGyro) window.sceneGyro.stop();
   if (embedShadowMode) stopShadowEmbedOverlayTracking();
   var obj = scenesData[sceneId];
-  if (!obj) return;
+  if (!obj) {
+    console.error('❌ シーンが data.js にありません:', sceneId);
+    if (sceneId && scenesData['0-aa001'] && sceneId !== '0-aa001') {
+      console.warn('⚠️ 代わりに 0-aa001 を開きます。data.js と tiles1024/' + sceneId + '/ を確認してください。');
+      switchScene('0-aa001', yaw, pitch, fov, fromPortalHotspot, keepFullscreenOverlay);
+    }
+    return;
+  }
 
   console.log('🔵 switchScene: sceneId=' + sceneId + ', yaw=' + (yaw !== undefined ? radToDeg(yaw).toFixed(2) + '°' : 'undefined') + ', pitch=' + (pitch !== undefined ? radToDeg(pitch).toFixed(2) + '°' : 'undefined'));
 
