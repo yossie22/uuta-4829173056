@@ -1226,6 +1226,7 @@ body.embed-shadow #hiResPeekOverlay { display: none !important; }
 var urlParams = new URLSearchParams(window.location.search);
 var embedPlacerMode = urlParams.get('embed') === '1';
 var embedShadowMode = urlParams.get('embed') === 'shadow';
+var placerImageCacheBust = String(Date.now());
 if (embedPlacerMode) document.body.classList.add('embed-placer');
 if (embedShadowMode) document.body.classList.add('embed-shadow');
 var initialYaw = urlParams.get('yaw');
@@ -1728,12 +1729,34 @@ var hiResPeekLiveFrameRect = null;
 var hiResPeekFrozenView = null;
 var hiResPeekViewChangeStop = null;
 
+/** シーンID/名前の直後に a が付く音源（例: 5-aa006a.mp3）は虫眼鏡アップ時のみ */
+function isPeekOnlyBgmFile(file, sceneData) {
+  if (!file || !sceneData) return false;
+  var base = normalizeSpatialSoundFile(file);
+  if (!base || !/a\.(mp3|m4a|wav|ogg)$/i.test(base)) return false;
+  var stemA = base.replace(/\.[^.]+$/i, '');
+  var id = String(sceneData.id || '').trim();
+  var name = String(sceneData.name || '').trim();
+  if (id && stemA === id + 'a') return true;
+  if (name && stemA === name + 'a') return true;
+  return false;
+}
+
 function hiResPeekBgmFile(cfg) {
   if (!cfg || !cfg.peekBgm) return '';
   return String(cfg.peekBgm).trim();
 }
 
-function buildHiResPeekBgmCandidates(cfg, sceneId) {
+function buildHiResPeekBgmCandidates(cfg, sceneData) {
+  var sceneId = '';
+  var sceneName = '';
+  if (sceneData) {
+    if (typeof sceneData === 'string') sceneId = sceneData;
+    else {
+      sceneId = sceneData.id || '';
+      sceneName = sceneData.name || '';
+    }
+  }
   var seen = {};
   var out = [];
   function push(f) {
@@ -1745,10 +1768,16 @@ function buildHiResPeekBgmCandidates(cfg, sceneId) {
   var fromCfg = hiResPeekBgmFile(cfg);
   if (fromCfg) push(fromCfg);
   if (sceneId) {
+    push(sceneId + 'a.mp3');
+    push(sceneId + 'a.m4a');
     push(sceneId + '/peek.mp3');
     push(sceneId + '/Produce.mp3');
     push('peek-' + sceneId + '.mp3');
     push(sceneId + '-peek.mp3');
+  }
+  if (sceneName) {
+    push(sceneName + 'a.mp3');
+    push(sceneName + 'a.m4a');
   }
   return out;
 }
@@ -1814,7 +1843,9 @@ function probeSoundsFileViaAudio(file) {
 }
 
 function resolveAutoSceneBgmItems(sceneData) {
-  var candidates = buildSceneBgmAutoCandidates(sceneData);
+  var candidates = buildSceneBgmAutoCandidates(sceneData).filter(function(file) {
+    return !isPeekOnlyBgmFile(file, sceneData);
+  });
   if (!candidates.length) return Promise.resolve(null);
   var chain = Promise.resolve(null);
   candidates.forEach(function(file) {
@@ -1861,7 +1892,7 @@ function playHiResPeekBgm(cfg) {
     audioUnlockConsumed = true;
   }
   var sceneId = currentSceneObj && currentSceneObj.data ? currentSceneObj.data.id : '';
-  var candidates = buildHiResPeekBgmCandidates(cfg, sceneId);
+  var candidates = buildHiResPeekBgmCandidates(cfg, currentSceneObj ? currentSceneObj.data : sceneId);
   if (!candidates.length) return;
   bgmSuppressedForVideo++;
   Object.keys(bgmAudios).forEach(function(key) {
@@ -3185,6 +3216,17 @@ function openHiResPeekOverlay(cfg, hotspotEl) {
   }
   baseImg.onerror = function() {
     if (!hiResPeekOpen) return;
+    var layers = cfg.layerSrcs || cfg.layers;
+    if (layers && layers.length) {
+      var alt = String(layers[0] || '').trim();
+      if (alt && alt !== expectedImage) {
+        console.warn('⚠️ 高画質画像を読み込めません。代替:', alt);
+        expectedImage = alt;
+        imageReadyDone = false;
+        baseImg.src = hiResPeekImageUrl(expectedImage);
+        return;
+      }
+    }
     console.warn('⚠️ 高画質画像を読み込めません:', expectedImage);
     closeHiResPeekOverlay();
   };
@@ -5071,9 +5113,18 @@ function sceneHasVideoHotspots(sceneId, sceneData) {
 function videoHotspotSrcUrl(rawSrc) {
   var src = rawSrc || '';
   if (!src) return src;
-  if (src.indexOf('?') < 0) src += '?v=' + encodeURIComponent(BUILD_STAMP);
-  else src += '&v=' + encodeURIComponent(BUILD_STAMP);
+  var bust = embedPlacerMode ? placerImageCacheBust : BUILD_STAMP;
+  if (src.indexOf('?') < 0) src += '?v=' + encodeURIComponent(bust);
+  else src += '&v=' + encodeURIComponent(bust);
   return src;
+}
+
+function forceReloadStillImageEntry(entry, vh) {
+  if (!entry || !entry.stillImg || !vh || !vh.src) return;
+  entry.stillImg.src = videoHotspotSrcUrl(vh.src);
+  entry.guideVideoSrc = vh.src;
+  entry.guideStillHidden = false;
+  if (entry.wrap) entry.wrap.style.opacity = '1';
 }
 
 function videoHotspotIsStillImage(vh) {
@@ -5439,7 +5490,9 @@ function placerPreviewHotspotKey(h) {
   return JSON.stringify({
     src: h.src, srcHevc: h.srcHevc, yaw: h.yaw, pitch: h.pitch,
     width: h.width, height: h.height, radius: h.radius,
-    fadeBottom: h.fadeBottom,
+    fadeBottom: h.fadeBottom, edgeFade: h.edgeFade,
+    fadeInMs: h.fadeInMs, fadeOutMs: h.fadeOutMs, playDurationMs: h.playDurationMs,
+    _imgBust: h._imgBust,
     tone: h.tone, objectFit: h.objectFit, objectPositionY: h.objectPositionY
   });
 }
@@ -6914,6 +6967,14 @@ function cleanupGuideStillFadeTimers(entry) {
 
 function setupGuideStillImageFadeSchedule(wrap, entry, vh) {
   if (!wrap || !entry || !vh) return;
+  if (embedPlacerMode) {
+    cleanupGuideStillFadeTimers(entry);
+    entry.guideStillHidden = false;
+    entry.guidePlaybackDone = true;
+    wrap.style.opacity = '1';
+    wrap.style.transition = '';
+    return;
+  }
   cleanupGuideStillFadeTimers(entry);
   var fadeInMs = vh.fadeInMs != null ? parseInt(vh.fadeInMs, 10) : 0;
   var fadeOutMs = guideFadeOutMs(vh);
@@ -6979,9 +7040,8 @@ function updateVideoHotspotLive(vh) {
     if (vh.src) {
       var wantBase = guideVideoFileBaseName(vh.src);
       var curBase = guideVideoFileBaseName(entry.guideVideoSrc || entry.stillImg.src);
-      if (wantBase && wantBase !== curBase) {
-        entry.stillImg.src = videoHotspotSrcUrl(vh.src);
-        entry.guideVideoSrc = vh.src;
+      if (vh._imgBust || (wantBase && wantBase !== curBase)) {
+        forceReloadStillImageEntry(entry, vh);
       }
     }
     applyVideoHotspotObjectFit(entry.stillImg, vh);
@@ -7155,6 +7215,7 @@ function applyPlacerPreviewHotspot(hotspot, sceneId, fromParent) {
     destroySceneVideoHotspots();
     return;
   }
+  if (hotspot._imgBust) placerImageCacheBust = String(hotspot._imgBust);
   hotspot = mergeGuideHotspotPreview(hotspot, newSceneId);
   if (fromParent) {
     schedulePlacerLiveAttach(hotspot, newSceneId);
@@ -9588,10 +9649,15 @@ function connectSpatialBgmChain(audio) {
 
 function getAudioTargetVolume(audio) {
   if (!audio) return bgmVolume;
-  if (audio.__bgmLayer === 'course' || !audio.__spatial) return bgmVolume;
-  if (!currentView) return bgmVolume;
+  if (audio.__bgmLayer === 'course') return getCourseBgmTargetVolume();
+  var base = bgmVolume;
+  if (audio.__bgmLayer === 'scene' && audio.loop && isSceneNarrationPlaying()) {
+    base = bgmVolume * getBgmDuckVolumeFactor();
+  }
+  if (!audio.__spatial) return base;
+  if (!currentView) return base;
   var p = currentView.parameters();
-  return bgmVolume * spatialVolumeFactorForConfig(audio.__spatial, p.yaw, p.pitch);
+  return base * spatialVolumeFactorForConfig(audio.__spatial, p.yaw, p.pitch);
 }
 
 function getBgmDuckingConfig() {
@@ -9640,17 +9706,16 @@ function applySpatialBgmVolumes() {
     var a = bgmAudios[key];
     if (!a || a.ended) return;
     if (bgmSuppressedForVideo > 0) return;
+    var vol = getAudioTargetVolume(a);
     if (a.__bgmLayer === 'course') {
-      var courseVol = getCourseBgmTargetVolume();
       if (a.__courseGain || (duckChanged && duckFade > 0)) {
-        if (duckChanged && duckFade > 0 && !a.__courseGain) fadeInAudio(a, courseVol, duckFade);
-        else setBgmOutputVolume(a, courseVol);
+        if (duckChanged && duckFade > 0 && !a.__courseGain) fadeInAudio(a, vol, duckFade);
+        else setBgmOutputVolume(a, vol);
       } else {
-        a.volume = courseVol;
+        a.volume = vol;
       }
       return;
     }
-    var vol = getAudioTargetVolume(a);
     setBgmOutputVolume(a, vol);
     if (a.__spatial && a.__spatialPanner && currentView) {
       a.__spatialPanner.pan.value = spatialStereoPanForConfig(a.__spatial, currentView.parameters().yaw);
@@ -9745,7 +9810,7 @@ function getExplicitBgmItems(sceneData) {
       if (normalizedSceneItem) items.push(normalizedSceneItem);
     }
   }
-  items = items.filter(function(it) { return it && it.file; });
+  items = items.filter(function(it) { return it && it.file && !isPeekOnlyBgmFile(it.file, sceneData); });
   if (items.length) return items;
   return null;
 }
@@ -9839,6 +9904,10 @@ function stopBgmLayer(layer) {
 function playSceneBGMItems(sceneId, sceneObj, bgmItems) {
   var course = sceneObj.data.course || null;
 
+  bgmItems = (bgmItems || []).filter(function(item) {
+    return item && item.file && !isPeekOnlyBgmFile(item.file, sceneObj.data);
+  });
+
   if (!bgmItems || !bgmItems.length) {
     stopAllBGM();
     activeBgmCourse = null;
@@ -9883,7 +9952,7 @@ function playSceneBGMItems(sceneId, sceneObj, bgmItems) {
         existing.__fadeTimer = null;
       }
       existing.loop = resolveLoopFlag(file, item);
-      existing.volume = getAudioTargetVolume(existing);
+      setBgmOutputVolume(existing, getAudioTargetVolume(existing));
       existing.__bgmLayer = layer;
       if (item.fromCourse && course) activeBgmCourse = course;
       return;
@@ -10028,7 +10097,7 @@ function fadeInAudio(audio, targetVol, duration) {
     audio.__fadeInTimer = null;
   }
   function targetNow() {
-    return audio.__spatial ? getAudioTargetVolume(audio) : targetVol;
+    return getAudioTargetVolume(audio);
   }
   var tv = targetNow();
   var curVol = getBgmOutputVolume(audio);

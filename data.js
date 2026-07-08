@@ -113,13 +113,13 @@ var APP_DATA = {
       "infoHotspots": [],
       "position": 3,
       "course": "aa",
-      "heading": 219,
+      "heading": 154,
       "lat": 30.8651,
       "lng": 7.7309,
       "videoHotspots": [
         {
           "src": "泥んこ.png",
-          "yaw": 14.2,
+          "yaw": 6.5,
           "pitch": 23.5,
           "width": 400,
           "height": 543,
@@ -136,9 +136,9 @@ var APP_DATA = {
             "saturate": 0.88
           },
           "loop": false,
-          "fadeInMs": 800,
-          "fadeOutMs": 800,
-          "playDurationMs": 6000,
+          "fadeInMs": 2200,
+          "fadeOutMs": 3000,
+          "playDurationMs": 8000,
           "mediaType": "image",
           "autoplay": false,
           "playOnView": false,
@@ -181,14 +181,14 @@ var APP_DATA = {
       "infoHotspots": [],
       "position": 4,
       "course": "aa",
-      "heading": 150,
+      "heading": 185,
       "lat": 32.5544,
       "lng": 11.245,
       "videoHotspots": [
         {
-          "src": "アヒル.png",
-          "yaw": -44.6,
-          "pitch": 26.3,
+          "src": "アヒル2.png",
+          "yaw": -59.7,
+          "pitch": 32.8,
           "width": 454,
           "height": 616,
           "radius": 850,
@@ -199,14 +199,14 @@ var APP_DATA = {
           "objectFit": "contain",
           "objectPositionY": 100,
           "tone": {
-            "brightness": 1.1,
+            "brightness": 0.99,
             "contrast": 1.12,
             "saturate": 0.88
           },
           "loop": false,
-          "fadeInMs": 800,
-          "fadeOutMs": 800,
-          "playDurationMs": 6000,
+          "fadeInMs": 2200,
+          "fadeOutMs": 3000,
+          "playDurationMs": 8000,
           "mediaType": "image",
           "autoplay": false,
           "playOnView": false,
@@ -252,7 +252,7 @@ var APP_DATA = {
       "infoHotspots": [],
       "position": 5,
       "course": "aa",
-      "heading": 170,
+      "heading": 130,
       "lat": 31.4986,
       "lng": 24.0462
     },
@@ -296,7 +296,7 @@ var APP_DATA = {
       "lng": 30.9488,
       "hiResPeeks": [
         {
-          "imageSrc": "aa006eos.png",
+          "imageSrc": "aa006-0001.png",
           "layerSrcs": [
             "aa006-0001.png",
             "aa006-0002.png",
@@ -359,7 +359,7 @@ var APP_DATA = {
       "infoHotspots": [],
       "position": 7,
       "course": "aa",
-      "heading": 179,
+      "heading": 159,
       "lat": 64.7357,
       "lng": 46.009
     },
@@ -437,7 +437,7 @@ var APP_DATA = {
       "infoHotspots": [],
       "position": 9,
       "course": "aa",
-      "heading": 216,
+      "heading": 241,
       "lat": 64.3134,
       "lng": 52.7861
     },
@@ -476,7 +476,7 @@ var APP_DATA = {
       "infoHotspots": [],
       "position": 10,
       "course": "aa",
-      "heading": 223,
+      "heading": 243,
       "lat": 61.1459,
       "lng": 54.5432
     },
@@ -515,7 +515,7 @@ var APP_DATA = {
       "infoHotspots": [],
       "position": 11,
       "course": "aa",
-      "heading": 223,
+      "heading": 243,
       "lat": 53.9664,
       "lng": 58.1827
     },
@@ -554,7 +554,7 @@ var APP_DATA = {
       "infoHotspots": [],
       "position": 12,
       "course": "aa",
-      "heading": 224,
+      "heading": 249,
       "lat": 47.6314,
       "lng": 61.4458
     },
@@ -593,7 +593,7 @@ var APP_DATA = {
       "infoHotspots": [],
       "position": 13,
       "course": "aa",
-      "heading": 224,
+      "heading": 244,
       "lat": 40.2407,
       "lng": 64.3323
     },
@@ -632,7 +632,7 @@ var APP_DATA = {
       "infoHotspots": [],
       "position": 14,
       "course": "aa",
-      "heading": 223,
+      "heading": 243,
       "lat": 33.6947,
       "lng": 67.4699
     },
@@ -671,7 +671,7 @@ var APP_DATA = {
       "infoHotspots": [],
       "position": 15,
       "course": "aa",
-      "heading": 219,
+      "heading": 234,
       "lat": 27.7821,
       "lng": 70.4819
     },
@@ -749,7 +749,7 @@ var APP_DATA = {
       "infoHotspots": [],
       "position": 17,
       "course": "aa",
-      "heading": 137,
+      "heading": 127,
       "lat": 24.1923,
       "lng": 79.6436
     },
@@ -827,7 +827,7 @@ var APP_DATA = {
       "infoHotspots": [],
       "position": 19,
       "course": "aa",
-      "heading": 116,
+      "heading": 111,
       "lat": 34.7505,
       "lng": 87.4247
     },
@@ -866,7 +866,7 @@ var APP_DATA = {
       "infoHotspots": [],
       "position": 20,
       "course": "aa",
-      "heading": 114,
+      "heading": 59,
       "lat": 38.7626,
       "lng": 88.9307
     },
@@ -905,9 +905,10 @@ var APP_DATA = {
       "infoHotspots": [],
       "position": 21,
       "course": "aa",
-      "heading": 114,
+      "heading": 59,
       "lat": 42.3524,
       "lng": 86.7972,
+      "bgm": "20-aa021.mp3",
       "videoHotspots": [
         {
           "src": "video/owl.webm",
@@ -918,6 +919,7 @@ var APP_DATA = {
           "radius": 850,
           "fade": 0,
           "fadeBottom": 10,
+          "edgeFade": 0,
           "fullscreen": false,
           "objectFit": "contain",
           "objectPositionY": 50,
@@ -927,8 +929,8 @@ var APP_DATA = {
             "saturate": 0.88
           },
           "loop": false,
-          "fadeInMs": 800,
-          "fadeOutMs": 800,
+          "fadeInMs": 3000,
+          "fadeOutMs": 3000,
           "playDurationMs": 12000,
           "autoplay": true,
           "playOnView": false,
@@ -940,6 +942,18 @@ var APP_DATA = {
     }
   ],
   "name": "Local 1024tiles",
+  "bgmDucking": {
+    "enabled": true,
+    "duckVolume": 0.18,
+    "duckVolumeIos": 0.07,
+    "fadeMs": 800
+  },
+  "courseBgm": {
+    "aa": {
+      "file": "aa.mp3",
+      "loop": true
+    }
+  },
   "mapConfig": {
     "image": "map.jpg",
     "bounds": {
