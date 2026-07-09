@@ -824,6 +824,89 @@ body.embed-shadow .scene-video-2d-wrap {
   transition: opacity 0.95s ease-in-out;
 }
 
+.scene-flat-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 650;
+  background: #000;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.85s ease-in-out;
+  pointer-events: none;
+  overflow: hidden;
+}
+.scene-flat-overlay.is-active {
+  display: flex;
+  pointer-events: auto;
+}
+.scene-flat-overlay.is-visible {
+  opacity: 1;
+}
+.scene-flat-stage {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.scene-flat-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100vw;
+  max-height: 100vh;
+  max-height: 100dvh;
+  object-fit: contain;
+  object-position: center center;
+  opacity: 0;
+  transform: scale(1);
+  transition: opacity 0.85s ease-in-out;
+  will-change: transform, opacity;
+}
+.scene-flat-overlay.is-visible .scene-flat-image {
+  opacity: 1;
+}
+.scene-flat-image.is-revealing,
+.scene-flat-image.is-revealed {
+  transition: opacity 0.85s ease-in-out;
+}
+body.scene-flat-image-active #pano {
+  visibility: hidden;
+  pointer-events: none;
+}
+body.scene-flat-image-active #gyroButton,
+body.scene-flat-image-active #compassContainer,
+body.scene-flat-image-active #crosshair,
+body.scene-flat-image-active #headingAdjustBar,
+body.scene-flat-image-active .arrow-nav {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+.scene-flat-back-btn {
+  display: none;
+  position: fixed;
+  left: 14px;
+  top: 14px;
+  z-index: 661;
+  background: rgba(255, 255, 255, 0.94);
+  color: #111;
+  font-weight: bold;
+  font-size: 15px;
+  padding: 9px 14px;
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+  font-family: sans-serif;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.scene-flat-overlay.is-active .scene-flat-back-btn.is-visible {
+  display: block;
+}
+
 body.embed-placer #speedContainer,
 body.embed-placer #zoomContainer,
 body.embed-placer #fadeContainer,
@@ -1147,6 +1230,12 @@ body.embed-shadow #hiResPeekOverlay { display: none !important; }
   <img id="imageFullscreenPlayer" class="video-fs-image" alt="">
   <img id="imageFullscreenStart" class="video-fs-start-image" alt="">
 </div>
+<div id="sceneFlatImageOverlay" class="scene-flat-overlay" aria-hidden="true">
+  <div id="sceneFlatImageStage" class="scene-flat-stage">
+    <img id="sceneFlatImagePlayer" class="scene-flat-image" alt="">
+  </div>
+  <button type="button" id="sceneFlatImageBackBtn" class="scene-flat-back-btn" aria-label="前のVRシーンに戻る">← 戻る</button>
+</div>
 <div id="crosshair"></div>
 
 <button type="button" id="gyroButton" aria-label="ジャイロ" aria-pressed="false" title="ジャイロ"><span class="gyro-btn-label">GYRO</span></button>
@@ -1238,10 +1327,27 @@ window.TILES_BASE = "tiles1024";
 
 // data.js を fetch で読み込む（古い <script src="data.js"> キャッシュを避ける）
 (function loadDataAndBoot() {
+  function sanitizeGuideHotspots(appData) {
+    if (!appData || !Array.isArray(appData.scenes)) return;
+    var navyRe = /海軍|ipad2\.mp4/i;
+    var legacyIds = { '1-aa002': true, '18-aa019': true };
+    appData.scenes.forEach(function(sd) {
+      if (!sd || !sd.videoHotspots || !sd.videoHotspots.length) return;
+      sd.videoHotspots = sd.videoHotspots.filter(function(vh) {
+        if (!vh) return false;
+        var src = String(vh.src || '') + ' ' + String(vh.srcHevc || '') + ' ' + String(vh.srcIos || '');
+        if (legacyIds[sd.id] && navyRe.test(src)) return false;
+        return true;
+      });
+      if (!sd.videoHotspots.length) delete sd.videoHotspots;
+    });
+  }
+
   function loadAppDataFromJsText(text) {
     var fn = new Function(text + '\n;return typeof APP_DATA !== "undefined" ? APP_DATA : null;');
     var appData = fn();
     if (!appData) throw new Error('APP_DATA が未定義');
+    sanitizeGuideHotspots(appData);
     window.APP_DATA = appData;
     return appData;
   }
@@ -1249,7 +1355,7 @@ window.TILES_BASE = "tiles1024";
   function logGuideHotspotFromData() {
     try {
       var sc = (window.APP_DATA && window.APP_DATA.scenes) || [];
-      var ids = ['25-cc003', '18-aa019'];
+      var ids = ['25-cc003', '15-aa016', '18-aa019'];
       for (var d = 0; d < ids.length; d++) {
         for (var i = 0; i < sc.length; i++) {
           if (sc[i] && sc[i].id === ids[d] && sc[i].videoHotspots && sc[i].videoHotspots[0]) {
@@ -1335,6 +1441,15 @@ window.TILES_BASE = "tiles1024";
       document.head.appendChild(s);
     });
 })();
+
+window.addEventListener('pageshow', function(e) {
+  if (!e.persisted) return;
+  try {
+    if (typeof destroyGuideIosOverlayRoot === 'function') destroyGuideIosOverlayRoot();
+    if (typeof hideSceneFlatImage === 'function') hideSceneFlatImage(true);
+    guideVideoSessionDone = {};
+  } catch (ePs) {}
+});
 
 // 緑矢印設定をグローバルスコープで先に定義
 window.greenArrowConfig = {
@@ -1668,7 +1783,7 @@ data.scenes.forEach(function(scene) {
 });
 
 // ビルド識別（どのファイルが実行されているか確認用）
-var BUILD_STAMP = '2026-07-07-guide-png';
+var BUILD_STAMP = '2026-07-09-ios1';
 var guideVideoPreloadBySrc = {};
 var guideVideoSessionDone = {};
 console.log('🧩 viewer build:', BUILD_STAMP);
@@ -3570,6 +3685,15 @@ if (typeof GyroControl !== 'undefined' && GyroControl.isSupportedDevice() && gyr
 }
 
 data.scenes.forEach(function(sd) {
+  if (sceneUsesFlatImage(sd)) {
+    scenesData[sd.id] = {
+      scene: null,
+      view: null,
+      data: Object.assign({}, sd, { direction: sd.direction }),
+      isFlatImageScene: true
+    };
+    return;
+  }
   var source = panoTileSourceForScene(sd, data);
   var geometry = new Marzipano.CubeGeometry(sd.levels);
   var limiter = sceneViewLimiter(sd);
@@ -4567,6 +4691,272 @@ function hideFullscreenVideo(callOnEnd, instant) {
     fullscreenFadeOutTimer = null;
     finishHide();
   }, VIDEO_FS_FADE_OUT_MS);
+}
+
+var sceneFlatImageActive = false;
+var sceneFlatImageSceneId = null;
+var flatImageRevealAnim = null;
+
+function resolveFlatImageRevealOpts(sd) {
+  var r = sd && sd.flatImageReveal;
+  if (r === false || r === 'off') return null;
+  var base = {
+    centerX: 50,
+    centerY: 50,
+    startScale: 2.2,
+    endScale: 1,
+    durationMs: 17000,
+    startDelayMs: 500,
+    easing: 'ease-out'
+  };
+  if (!r || r === true) return base;
+  return Object.assign({}, base, r);
+}
+
+function flatImageRevealEase(t, mode) {
+  t = Math.max(0, Math.min(1, t));
+  if (mode === 'ease-in-out') {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+  return 1 - Math.pow(1 - t, 3);
+}
+
+function stopFlatImageReveal() {
+  if (flatImageRevealAnim && flatImageRevealAnim.raf) {
+    cancelAnimationFrame(flatImageRevealAnim.raf);
+  }
+  flatImageRevealAnim = null;
+  var img = document.getElementById('sceneFlatImagePlayer');
+  if (!img) return;
+  img.style.transform = '';
+  img.style.transformOrigin = '';
+  img.classList.remove('is-revealing', 'is-revealed');
+}
+
+function runFlatImageReveal(img, opts) {
+  stopFlatImageReveal();
+  if (!img || !opts) return;
+  var startScale = Math.max(1, Number(opts.startScale) || 2.2);
+  if (startScale <= 1.001) return;
+  var endScale = Number(opts.endScale) || 1;
+  var duration = Math.max(500, Number(opts.durationMs) || 17000);
+  var delay = Math.max(0, Number(opts.startDelayMs) || 0);
+  var cx = Math.max(0, Math.min(100, Number(opts.centerX) || 50));
+  var cy = Math.max(0, Math.min(100, Number(opts.centerY) || 50));
+  var easing = opts.easing || 'ease-out';
+  img.style.transformOrigin = cx + '% ' + cy + '%';
+  img.classList.add('is-revealing');
+  var state = { raf: null, t0: 0 };
+  flatImageRevealAnim = state;
+  function step(now) {
+    if (!sceneFlatImageActive || flatImageRevealAnim !== state) return;
+    if (!state.t0) state.t0 = now;
+    var elapsed = now - state.t0 - delay;
+    if (elapsed < 0) {
+      img.style.transform = 'scale(' + startScale + ')';
+      state.raf = requestAnimationFrame(step);
+      return;
+    }
+    var t = Math.min(1, elapsed / duration);
+    var eased = flatImageRevealEase(t, easing);
+    var scale = startScale + (endScale - startScale) * eased;
+    img.style.transform = 'scale(' + scale + ')';
+    if (t < 1) {
+      state.raf = requestAnimationFrame(step);
+      return;
+    }
+    img.classList.remove('is-revealing');
+    img.classList.add('is-revealed');
+    img.style.transform = 'scale(' + endScale + ')';
+    flatImageRevealAnim = null;
+  }
+  img.style.transform = 'scale(' + startScale + ')';
+  state.raf = requestAnimationFrame(step);
+}
+
+function resolveSceneFlatImageSrc(sd) {
+  if (!sd) return '';
+  var raw = String(sd.flatImage || sd.flatImageSrc || '').trim();
+  if (raw === 'auto') raw = '';
+  if (!raw && (sd.flatOnly === true || sd.useFlatImage === true)) {
+    return sd.id ? ('source_panos/' + sd.id + '.jpg') : '';
+  }
+  if (raw) return raw;
+  return '';
+}
+
+function sceneUsesFlatImage(sd) {
+  return !!resolveSceneFlatImageSrc(sd);
+}
+
+function resolveFlatImageReturnScene(sd, sceneId) {
+  var explicit = String(sd.flatImageReturnScene || sd.returnScene || '').trim();
+  if (explicit) {
+    var eid = resolveSceneId(explicit) || explicit;
+    if (scenesData[eid]) return eid;
+  }
+  if (window.flatImageReturnScene && scenesData[window.flatImageReturnScene]) {
+    return window.flatImageReturnScene;
+  }
+  if (window.returnScene && scenesData[window.returnScene]) {
+    return window.returnScene;
+  }
+  if (sd.imageHotspots && sd.imageHotspots.length) {
+    for (var i = 0; i < sd.imageHotspots.length; i++) {
+      var ih = sd.imageHotspots[i];
+      if (!ih || !ih.targetScene) continue;
+      var tid = resolveSceneId(ih.targetScene) || ih.targetScene;
+      if (scenesData[tid]) return tid;
+    }
+  }
+  var found = null;
+  data.scenes.forEach(function(s) {
+    if (found || !s.imageHotspots) return;
+    s.imageHotspots.forEach(function(ih) {
+      if (found || !ih || !ih.targetScene) return;
+      var tid = resolveSceneId(ih.targetScene) || ih.targetScene;
+      if (tid === sceneId) found = ih.sourceScene || ih.sceneStartId || s.id;
+    });
+  });
+  if (found && scenesData[found]) return found;
+  return null;
+}
+
+function resolveFlatImageReturnView(sd, returnId) {
+  if (window.flatImageReturnScene === returnId && window.flatImageReturnYaw != null) {
+    return {
+      yaw: window.flatImageReturnYaw,
+      pitch: window.flatImageReturnPitch != null ? window.flatImageReturnPitch : 0,
+      fov: window.flatImageReturnFov
+    };
+  }
+  if (sd.imageHotspots && sd.imageHotspots.length) {
+    for (var i = 0; i < sd.imageHotspots.length; i++) {
+      var ih = sd.imageHotspots[i];
+      if (!ih || !ih.targetScene) continue;
+      var tid = resolveSceneId(ih.targetScene) || ih.targetScene;
+      if (tid === returnId) return resolvePortalTargetView(ih);
+    }
+  }
+  var robj = scenesData[returnId];
+  if (robj && robj.data && robj.data.initialViewParameters) {
+    var iv = robj.data.initialViewParameters;
+    return { yaw: iv.yaw, pitch: iv.pitch, fov: resolveSceneInitialFov(robj.data) };
+  }
+  return { yaw: undefined, pitch: undefined, fov: undefined };
+}
+
+function updateSceneFlatImageBackBtn(sd, sceneId) {
+  var btn = document.getElementById('sceneFlatImageBackBtn');
+  if (!btn) return;
+  var returnId = resolveFlatImageReturnScene(sd, sceneId);
+  if (!returnId) {
+    btn.classList.remove('is-visible');
+    btn.removeAttribute('data-return-scene');
+    return;
+  }
+  btn.classList.add('is-visible');
+  btn.setAttribute('data-return-scene', returnId);
+  var robj = scenesData[returnId];
+  var label = (robj && robj.data && robj.data.name) ? robj.data.name : returnId;
+  btn.textContent = '← ' + label + 'へ戻る';
+}
+
+function onSceneFlatImageBack() {
+  if (!sceneFlatImageActive || !sceneFlatImageSceneId) return;
+  var obj = scenesData[sceneFlatImageSceneId];
+  if (!obj || !obj.data) return;
+  var returnId = resolveFlatImageReturnScene(obj.data, sceneFlatImageSceneId);
+  if (!returnId || !scenesData[returnId]) return;
+  var angles = resolveFlatImageReturnView(obj.data, returnId);
+  console.log('🖼 2D画像シーンから戻る:', sceneFlatImageSceneId, '→', returnId);
+  switchScene(returnId, angles.yaw, angles.pitch, angles.fov, true);
+}
+
+(function initSceneFlatImageBackBtn() {
+  var btn = document.getElementById('sceneFlatImageBackBtn');
+  if (!btn) return;
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    onSceneFlatImageBack();
+  });
+})();
+
+function hideSceneFlatImage(instant) {
+  if (!sceneFlatImageActive) return;
+  stopFlatImageReveal();
+  var overlay = document.getElementById('sceneFlatImageOverlay');
+  var img = document.getElementById('sceneFlatImagePlayer');
+  sceneFlatImageActive = false;
+  sceneFlatImageSceneId = null;
+  document.body.classList.remove('scene-flat-image-active');
+  if (!overlay) return;
+  function finish() {
+    overlay.classList.remove('is-active', 'is-visible');
+    overlay.setAttribute('aria-hidden', 'true');
+    if (img) {
+      img.removeAttribute('src');
+      img.style.opacity = '';
+      img.style.transform = '';
+    }
+    var backBtn = document.getElementById('sceneFlatImageBackBtn');
+    if (backBtn) backBtn.classList.remove('is-visible');
+  }
+  if (instant) {
+    finish();
+    return;
+  }
+  overlay.classList.remove('is-visible');
+  setTimeout(finish, 900);
+}
+
+function showSceneFlatImage(sd, sceneId, opts) {
+  opts = opts || {};
+  var src = resolveSceneFlatImageSrc(sd);
+  if (!src) {
+    console.warn('⚠️ 2D画像シーンですが flatImage がありません:', sceneId);
+    return false;
+  }
+  if (!isSupportedImageSrc(src)) {
+    console.warn('⚠️ 2D画像の形式が未対応です:', src);
+    return false;
+  }
+  var overlay = document.getElementById('sceneFlatImageOverlay');
+  var img = document.getElementById('sceneFlatImagePlayer');
+  if (!overlay || !img) return false;
+  sceneFlatImageActive = true;
+  sceneFlatImageSceneId = sceneId;
+  document.body.classList.add('scene-flat-image-active');
+  img.onload = function() {
+    overlay.classList.add('is-active');
+    overlay.setAttribute('aria-hidden', 'false');
+    var revealOpts = resolveFlatImageRevealOpts(sd);
+    if (revealOpts) runFlatImageReveal(img, revealOpts);
+    else {
+      img.style.transform = '';
+      img.style.transformOrigin = '';
+    }
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        overlay.classList.add('is-visible');
+      });
+    });
+  };
+  img.onerror = function() {
+    console.error('❌ 2D画像を読み込めません:', src);
+    hideSceneFlatImage(true);
+    if (scenesData['0-aa001'] && sceneId !== '0-aa001') {
+      switchScene('0-aa001');
+    }
+  };
+  img.alt = sd.name || sceneId || '';
+  overlay.classList.remove('is-visible');
+  img.removeAttribute('src');
+  img.src = src;
+  updateSceneFlatImageBackBtn(sd, sceneId);
+  console.log('🖼 2D画像シーン表示:', sceneId, '→', src);
+  return true;
 }
 
 function showFullscreenImage(src, opts) {
@@ -7600,6 +7990,52 @@ function switchScene(sceneId, yaw, pitch, fov, fromPortalHotspot, keepFullscreen
     }
   }
 
+  hideSceneFlatImage(true);
+
+  if (sceneUsesFlatImage(obj.data)) {
+    currentSceneObj = obj;
+    if (prevId && scenesData[prevId] && !sceneUsesFlatImage(scenesData[prevId].data)) {
+      window.flatImageReturnScene = prevId;
+      if (currentView && currentView.parameters) {
+        var pv = currentView.parameters();
+        window.flatImageReturnYaw = pv.yaw;
+        window.flatImageReturnPitch = pv.pitch;
+        window.flatImageReturnFov = pv.fov;
+      }
+    }
+    if (!showSceneFlatImage(obj.data, sceneId, { fromPortal: fromPortalHotspot })) {
+      if (scenesData['0-aa001'] && sceneId !== '0-aa001') {
+        switchScene('0-aa001', yaw, pitch, fov, fromPortalHotspot, keepFullscreenOverlay);
+      }
+      return;
+    }
+    var textElFlat = document.getElementById('sceneText');
+    if (obj.data.infoHotspots && obj.data.infoHotspots.length > 0 && (obj.data.infoHotspots[0].text || obj.data.infoHotspots[0].title)) {
+      var hsFlat = obj.data.infoHotspots[0];
+      var hsStyleFlat = hsFlat.style || {};
+      textElFlat.textContent = normalizeInfoHotspotText(hsFlat.text || hsFlat.title);
+      textElFlat.style.fontSize = scaledSceneTextFontSize(hsStyleFlat.fontSize || '20px');
+      textElFlat.style.fontFamily = hsStyleFlat.fontFamily || 'sans-serif';
+      textElFlat.style.color = hsStyleFlat.color || '#ffffff';
+      textElFlat.style.bottom = '8%';
+      textElFlat.style.left = '50%';
+      textElFlat.style.transition = 'none';
+      textElFlat.style.opacity = '0';
+      textElFlat.style.display = 'block';
+      textElFlat.getBoundingClientRect();
+      textElFlat.style.transition = 'opacity 1s ease';
+      textElFlat.style.opacity = '1';
+    } else if (textElFlat) {
+      textElFlat.style.display = 'none';
+    }
+    refreshCounterDisplay();
+    playSceneBGM(sceneId);
+    showUI();
+    scheduleYellowAutoMoveAfterSwitch(sceneId, fromPortalHotspot ? 1800 : 700);
+    updateCompassDisplay();
+    return;
+  }
+
   var targetYaw = yaw;
   var targetPitch = pitch;
 
@@ -7648,6 +8084,10 @@ function switchScene(sceneId, yaw, pitch, fov, fromPortalHotspot, keepFullscreen
   }
 
   currentSceneObj = obj;
+  if (!obj.scene || !obj.view) {
+    console.error('❌ VRシーンを表示できません:', sceneId);
+    return;
+  }
   currentScene = obj.scene;
   currentView = obj.view;
   bindSpatialBgmViewListener(currentView);
@@ -9486,6 +9926,7 @@ function computeGreenArrowTargetYaw(arrow, departureYaw, targetInitialYaw, fromS
 function degToRad(d) { return d * Math.PI / 180; }
 function radToDeg(r) { return r * 180 / Math.PI; }
 window.goToMap = function() {
+  hideSceneFlatImage(true);
   courseBgmSessionPlayed = {};
   activeBgmCourse = null;
   lastSceneBgmId = null;

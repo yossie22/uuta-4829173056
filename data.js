@@ -938,6 +938,27 @@ var APP_DATA = {
           "srcHevc": "video/owl-ipad.mp4",
           "footShadow": false
         }
+      ],
+      "imageHotspots": [
+        {
+          "sceneStartId": "20-aa021",
+          "sourceScene": "20-aa021",
+          "src": "portal_512.png",
+          "width": 350,
+          "height": 350,
+          "yawCenter": 180,
+          "yawRange": 30,
+          "targetScene": "21-bb001",
+          "targetYaw": 0,
+          "targetPitch": 0,
+          "fadeTime": 5,
+          "dispTime": 10000,
+          "startHoldTime": 1000,
+          "effect": "grow",
+          "resetDisplay": false,
+          "pitchCenter": 5,
+          "pitchRange": 35
+        }
       ]
     },
     {
@@ -1032,27 +1053,6 @@ var APP_DATA = {
           "peekBgmLoop": false
         }
       ],
-      "imageHotspots": [
-        {
-          "sceneStartId": "4-bb001",
-          "sourceScene": "4-bb001",
-          "src": "portal_288x214.png",
-          "width": 350,
-          "height": 350,
-          "yawCenter": 180,
-          "yawRange": 30,
-          "targetScene": "0-aa001",
-          "targetYaw": 0,
-          "targetPitch": 0,
-          "fadeTime": 5,
-          "dispTime": 10000,
-          "startHoldTime": 1000,
-          "effect": "growHalf",
-          "resetDisplay": false,
-          "pitchCenter": 5,
-          "pitchRange": 35
-        }
-      ],
       "spatialAudio": {
         "sources": [
           {
@@ -1065,6 +1065,74 @@ var APP_DATA = {
           }
         ]
       }
+    },
+    {
+      "id": "21-bb001",
+      "name": "bb001",
+      "flatImage": "source_panos/21-bb001.jpg",
+      "flatImageReturnScene": "20-aa021",
+      "flatImageReveal": {
+        "centerX": 47,
+        "centerY": 54,
+        "startScale": 2.4,
+        "durationMs": 17000,
+        "startDelayMs": 600,
+        "easing": "ease-out"
+      },
+      "bgm": "21-bb001.mp3",
+      "levels": [
+        {
+          "tileSize": 256,
+          "size": 256,
+          "fallbackOnly": true
+        },
+        {
+          "tileSize": 512,
+          "size": 512
+        },
+        {
+          "tileSize": 1024,
+          "size": 1024
+        }
+      ],
+      "faceSize": 1536,
+      "initialViewParameters": {
+        "yaw": 0,
+        "pitch": 0,
+        "fov": 1.1479251634083179
+      },
+      "linkHotspots": [
+        {
+          "yaw": 0,
+          "pitch": 0,
+          "rotation": 0,
+          "target": "21-bb001"
+        }
+      ],
+      "infoHotspots": [],
+      "position": 1,
+      "course": "bb",
+      "imageHotspots": [
+        {
+          "sceneStartId": "21-bb001",
+          "sourceScene": "21-bb001",
+          "src": "portal_512b.png",
+          "width": 700,
+          "height": 700,
+          "yawCenter": 90,
+          "yawRange": 20,
+          "pitchCenter": 0,
+          "targetScene": "20-aa021",
+          "targetYaw": 0,
+          "targetPitch": 0,
+          "fadeTime": 5,
+          "dispTime": 10000,
+          "startHoldTime": 2500,
+          "effect": "grow",
+          "resetDisplay": false,
+          "pitchRange": 20
+        }
+      ]
     }
   ],
   "name": "Local 1024tiles",
@@ -1116,7 +1184,7 @@ var APP_DATA = {
       "descText": "",
       "mapImage": "map_portal.jpg",
       "markImage": "portal.png",
-      "sceneId": "4-bb001",
+      "sceneId": "21-bb001",
       "pinName": "霊山",
       "pinColor": "#00cc44",
       "pinX": 40.3,
@@ -1149,7 +1217,7 @@ var APP_DATA = {
       "twoPoint": null,
       "pins": [
         {
-          "sceneId": "4-bb001",
+          "sceneId": "21-bb001",
           "name": "霊山",
           "color": "#00cc44",
           "pinX": 40.3,

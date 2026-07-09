@@ -3,6 +3,9 @@
 <head>
 <title>VRツアーマップ</title>
 <meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -101,7 +104,7 @@ var MAP_PORTAL = {
   markImage: 'portal.png',
   mapImage: 'map_portal.jpg',
   fullMapPage: 'map_portal.html',
-  sceneId: '4-bb001',
+  sceneId: '21-bb001',
   pinName: '霊山',
   pinColor: '#00cc44',
   pinX: 40.3, pinY: 40.5,
@@ -109,12 +112,13 @@ var MAP_PORTAL = {
   anchorX: 97, anchorY: 82,
   phoneAnchorX: 97, phoneAnchorY: 82
 };
+var VIEWER_BUILD = '2026-07-09-ios1';
 function goToPortalScene(sceneId) {
   var sid = sceneId || (MAP_PORTAL && MAP_PORTAL.sceneId);
   if (!sid) return;
   var url = './viewer.html?id=' + encodeURIComponent(sid);
   if (SIDE_BRANCHES.length > 0) url += "&sideBranches=" + encodeURIComponent(JSON.stringify(SIDE_BRANCHES));
-  url += '&back=./map.html';
+  url += '&back=./map.html&v=' + encodeURIComponent(VIEWER_BUILD);
   window.location.href = url;
 }
 function goToPortalMap() {
@@ -319,7 +323,7 @@ function goToScene(pin) {
   if (SIDE_BRANCHES.length > 0) {
     url += '&sideBranches=' + encodeURIComponent(JSON.stringify(SIDE_BRANCHES));
   }
-  url += '&back=./map.html';
+  url += '&back=./map.html&v=' + encodeURIComponent(VIEWER_BUILD);
   window.location.href = url;
 }
 
