@@ -1489,6 +1489,7 @@ var courseBgmSessionPlayed = {}; // 地図に戻るまでコースBGMを1回だ�
 var activeBgmCourse = null;      // いま鳴っているBGMのコース（bb→aa などコース変更で停止）
 var bgmSuppressedForVideo = 0;   // 動画再生中はBGMをフェードアウト
 var lastAppliedBgmDuckFactor = 1; // ナレーション中のコースBGM自動ダック
+var sceneNarrationSessionDone = {}; // 同一シーン滞在中にナレーションを繰り返さない
 
 /** 緑矢印の遷移先ID補正（17dd001 → 17-dd001）。グローバル定義（URL読込より前） */
 function resolveSceneId(rawId) {
@@ -1783,7 +1784,7 @@ data.scenes.forEach(function(scene) {
 });
 
 // ビルド識別（どのファイルが実行されているか確認用）
-var BUILD_STAMP = '2026-07-09-ios4';
+var BUILD_STAMP = '2026-07-09-ios5';
 var guideVideoPreloadBySrc = {};
 var guideVideoSessionDone = {};
 console.log('🧩 viewer build:', BUILD_STAMP);
@@ -8021,6 +8022,7 @@ function switchScene(sceneId, yaw, pitch, fov, fromPortalHotspot, keepFullscreen
   console.log('🔵 switchScene: sceneId=' + sceneId + ', yaw=' + (yaw !== undefined ? radToDeg(yaw).toFixed(2) + '°' : 'undefined') + ', pitch=' + (pitch !== undefined ? radToDeg(pitch).toFixed(2) + '°' : 'undefined'));
 
   var prevId = currentSceneObj ? currentSceneObj.data.id : null;
+  if (sceneId !== prevId) clearSceneNarrationSession(sceneId);
   var hadIosGuide = (window.sceneVideoEls || []).some(function(e) {
     return e && e.iosScreenOverlay;
   });
@@ -9984,6 +9986,7 @@ function radToDeg(r) { return r * 180 / Math.PI; }
 window.goToMap = function() {
   hideSceneFlatImage(true);
   courseBgmSessionPlayed = {};
+  sceneNarrationSessionDone = {};
   activeBgmCourse = null;
   lastSceneBgmId = null;
   guideVideoSessionDone = {};
@@ -10001,6 +10004,26 @@ window.goToMap = function() {
 // ========================================
 // ★ BGM再生管理
 // ========================================
+function narrationSessionKey(sceneId, file) {
+  return String(sceneId || '') + '|' + String(file || '');
+}
+
+function sceneNarrationAlreadyDone(sceneId, file) {
+  return !!sceneNarrationSessionDone[narrationSessionKey(sceneId, file)];
+}
+
+function markSceneNarrationDone(sceneId, file) {
+  sceneNarrationSessionDone[narrationSessionKey(sceneId, file)] = true;
+}
+
+function clearSceneNarrationSession(sceneId) {
+  if (!sceneId) return;
+  var prefix = sceneId + '|';
+  Object.keys(sceneNarrationSessionDone).forEach(function(key) {
+    if (key.indexOf(prefix) === 0) delete sceneNarrationSessionDone[key];
+  });
+}
+
 function shouldPlayBGM() {
   return audioEnabled && bgmPlaying && (bgmEnabled || bgmForce);
 }
@@ -10380,16 +10403,12 @@ function playSceneBGM(sceneId) {
 
   var explicit = getExplicitBgmItems(sceneObj.data);
   if (explicit && explicit.length) {
-    startItems(explicit);
+    startItems(mergeSceneBgmItems(explicit, getCourseBgmItems(sceneObj.data)));
     return;
   }
 
   resolveAutoSceneBgmItems(sceneObj.data).then(function(autoItems) {
-    if (autoItems && autoItems.length) {
-      startItems(autoItems);
-      return;
-    }
-    startItems(getCourseBgmItems(sceneObj.data));
+    startItems(mergeSceneBgmItems(autoItems, getCourseBgmItems(sceneObj.data)));
   });
 }
 
@@ -10455,13 +10474,15 @@ function playSceneBGMItems(sceneId, sceneObj, bgmItems) {
     var file = item.file;
     if (!file) return;
     var layer = item.fromCourse ? 'course' : 'scene';
+    var shouldLoop = resolveLoopFlag(file, item);
+    if (layer === 'scene' && !shouldLoop && sceneNarrationAlreadyDone(sceneId, file)) return;
     var existing = bgmAudios[file];
     if (existing && !existing.paused && !existing.ended && existing.volume > 0.05) {
       if (existing.__fadeTimer) {
         clearInterval(existing.__fadeTimer);
         existing.__fadeTimer = null;
       }
-      existing.loop = resolveLoopFlag(file, item);
+      existing.loop = shouldLoop;
       setBgmOutputVolume(existing, getAudioTargetVolume(existing));
       existing.__bgmLayer = layer;
       if (item.fromCourse && course) activeBgmCourse = course;
@@ -10469,10 +10490,11 @@ function playSceneBGMItems(sceneId, sceneObj, bgmItems) {
     }
     if (!existing || existing.paused || existing.ended) {
       playAudio(soundsUrl(file), {
-        loop: resolveLoopFlag(file, item),
+        loop: shouldLoop,
         course: (item.fromCourse && course) ? course : null,
         cacheKey: file,
         layer: layer,
+        sceneId: layer === 'scene' ? sceneId : null,
         spatial: layer === 'scene' ? resolveSpatialAudioConfig(sceneObj.data, file) : null,
         reverb: layer === 'scene' ? resolveSceneReverb(sceneObj.data, file) : null
       });
@@ -10495,6 +10517,7 @@ function playAudio(filePath, opts) {
   audio.volume = 0;
   audio.__bgmLayer = opts.layer || (opts.course ? 'course' : 'scene');
   audio.__bgmCourse = opts.course || null;
+  audio.__sceneId = opts.sceneId || null;
   audio.__spatial = opts.spatial || null;
   if (audio.__bgmCourse) courseBgmSessionPlayed[audio.__bgmCourse] = true;
 
@@ -10526,6 +10549,9 @@ function playAudio(filePath, opts) {
   if (!audio.loop) {
     audio.addEventListener('ended', function() {
       if (audio.__bgmCourse) courseBgmSessionPlayed[audio.__bgmCourse] = true;
+      if (audio.__bgmLayer === 'scene' && audio.__sceneId) {
+        markSceneNarrationDone(audio.__sceneId, key);
+      }
       if (bgmAudios[key] === audio) delete bgmAudios[key];
       applySpatialBgmVolumes();
     });
