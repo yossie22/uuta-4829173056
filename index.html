@@ -6,6 +6,18 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
+<script>
+(function() {
+  var MAP_BUILD = '2026-07-09-ios3';
+  try {
+    var p = new URLSearchParams(location.search);
+    if (p.get('v') !== MAP_BUILD) {
+      p.set('v', MAP_BUILD);
+      location.replace(location.pathname + '?' + p.toString() + location.hash);
+    }
+  } catch (e) {}
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -62,7 +74,7 @@ body, html { width: 100%; height: 100%; min-height: -webkit-fill-available; over
   <div class="map-portal-caption" id="mapPortalCaption">ポータル</div>
   <div class="map-portal-label" id="mapPortalLabel">ポータル先</div>
   <div class="map-portal-ring">
-    <img class="map-portal-mark" id="mapPortalMark" src="portal.png" alt="">
+    <img class="map-portal-mark" id="mapPortalMark" src="portal_512.png" alt="">
     <img class="map-portal-map" id="mapPortalMap" src="map_portal.jpg" alt="">
     <div class="map-portal-pin" id="mapPortalPin"></div>
   </div>
@@ -101,7 +113,7 @@ function gpsToPercent(lat, lng) {
 var MAP_PORTAL = {
   label: 'ポータル先',
   shortLabel: 'ポータル',
-  markImage: 'portal.png',
+  markImage: 'portal_512.png',
   mapImage: 'map_portal.jpg',
   fullMapPage: 'map_portal.html',
   sceneId: '21-bb001',
@@ -113,7 +125,14 @@ var MAP_PORTAL = {
   anchorX: 97, anchorY: 82,
   phoneAnchorX: 97, phoneAnchorY: 82
 };
-var VIEWER_BUILD = '2026-07-09-ios2';
+var VIEWER_BUILD = '2026-07-09-ios3';
+function mapPortalAssetUrl(file) {
+  var s = String(file || '');
+  if (!s) return s;
+  if (s.indexOf('?') < 0) s += '?v=' + encodeURIComponent(VIEWER_BUILD);
+  else s += '&v=' + encodeURIComponent(VIEWER_BUILD);
+  return s;
+}
 function goToPortalScene(sceneId) {
   var sid = sceneId || (MAP_PORTAL && MAP_PORTAL.sceneId);
   if (!sid) return;
@@ -131,12 +150,56 @@ function bindMapPortalLongPress(portalEl) {
   portalEl._portalLongPressBound = true;
   var HOLD_MS = 600, MOVE_TOL = 18, timer = null, moved = false, sx = 0, sy = 0, startMs = 0;
   function clearTimer() { if (timer) { clearTimeout(timer); timer = null; } }
-  function onDown(cx, cy) { moved = false; portalEl._portalLongFired = false; sx = cx; sy = cy; startMs = Date.now(); clearTimer(); timer = setTimeout(function() { if (moved) return; portalEl._portalLongFired = true; goToPortalMap(); }, HOLD_MS); }
-  function onMove(cx, cy) { if (moved) return; if (Math.hypot(cx - sx, cy - sy) > MOVE_TOL) { moved = true; clearTimer(); } }
-  function onUp() { var held = Date.now() - startMs; clearTimer(); if (!moved && held >= HOLD_MS && !portalEl._portalLongFired) { portalEl._portalLongFired = true; goToPortalMap(); } }
-  portalEl.addEventListener("touchstart", function(e) { if (!e.touches || !e.touches.length) return; e.preventDefault(); onDown(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
-  portalEl.addEventListener("touchmove", function(e) { if (!e.touches || !e.touches.length) return; onMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
-  portalEl.addEventListener("touchend", onUp, { passive: true });
+  function togglePortalOpen() {
+    portalEl.classList.toggle("is-open");
+    layoutMapPortal();
+    layoutMapPortalPin();
+    setTimeout(layoutMapPortalPin, 80);
+  }
+  function onDown(cx, cy) {
+    moved = false;
+    portalEl._portalLongFired = false;
+    portalEl._portalShortTapped = false;
+    sx = cx; sy = cy;
+    startMs = Date.now();
+    clearTimer();
+    timer = setTimeout(function() {
+      if (moved) return;
+      portalEl._portalLongFired = true;
+      goToPortalMap();
+    }, HOLD_MS);
+  }
+  function onMove(cx, cy) {
+    if (moved) return;
+    if (Math.hypot(cx - sx, cy - sy) > MOVE_TOL) { moved = true; clearTimer(); }
+  }
+  function onUp() {
+    var held = Date.now() - startMs;
+    clearTimer();
+    if (moved) return;
+    if (held >= HOLD_MS && !portalEl._portalLongFired) {
+      portalEl._portalLongFired = true;
+      goToPortalMap();
+      return;
+    }
+    if (held < HOLD_MS && isMapTouchUI()) {
+      portalEl._portalShortTapped = true;
+      togglePortalOpen();
+    }
+  }
+  portalEl.addEventListener("touchstart", function(e) {
+    if (!e.touches || !e.touches.length) return;
+    if (e.target.closest && e.target.closest(".map-portal-pin")) return;
+    onDown(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  portalEl.addEventListener("touchmove", function(e) {
+    if (!e.touches || !e.touches.length) return;
+    onMove(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  portalEl.addEventListener("touchend", function(e) {
+    if (e.target.closest && e.target.closest(".map-portal-pin")) return;
+    onUp();
+  }, { passive: true });
   portalEl.addEventListener("touchcancel", onUp, { passive: true });
   portalEl.addEventListener("mousedown", function(e) { if (e.button !== 0) return; onDown(e.clientX, e.clientY); });
   portalEl.addEventListener("mousemove", function(e) { if (e.buttons !== 1) return; onMove(e.clientX, e.clientY); });
@@ -228,17 +291,27 @@ function initMapPortal() {
   if (captionEl) captionEl.textContent = MAP_PORTAL.shortLabel || "ポータル";
   if (labelEl) labelEl.textContent = MAP_PORTAL.label || "ポータル先";
   if (markEl && MAP_PORTAL.markImage) {
+    markEl.onerror = function() {
+      if (MAP_PORTAL.markImage !== 'portal_512.png') {
+        markEl.src = mapPortalAssetUrl('portal_512.png');
+      }
+    };
     markEl.onload = scheduleMapPortalRelayout;
-    markEl.src = MAP_PORTAL.markImage;
+    markEl.src = mapPortalAssetUrl(MAP_PORTAL.markImage);
   }
   if (mapEl && MAP_PORTAL.mapImage) {
     mapEl.onload = layoutMapPortalPin;
-    mapEl.src = MAP_PORTAL.mapImage;
+    mapEl.src = mapPortalAssetUrl(MAP_PORTAL.mapImage);
   }
   if (pinEl) {
     pinEl.innerHTML = '<div class="pin-label">' + (MAP_PORTAL.pinName || '') + '</div><div class="pin-icon" style="background:' + (MAP_PORTAL.pinColor || '#00cc44') + ';"><span class="pin-number">P</span></div>';
     layoutMapPortalPin();
-    pinEl.addEventListener("click", function(e) { e.stopPropagation(); goToPortalScene(); });
+    function openPortalScene(e) {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      goToPortalScene();
+    }
+    pinEl.addEventListener("click", openPortalScene);
+    pinEl.addEventListener("touchend", openPortalScene, { passive: false });
   }
   scheduleMapPortalRelayout();
   bindMapPortalLongPress(portalEl);
@@ -247,6 +320,7 @@ function initMapPortal() {
     portalEl._touchClickBound = true;
     portalEl.addEventListener("click", function(e) {
       if (portalEl._portalLongFired) { portalEl._portalLongFired = false; e.preventDefault(); e.stopPropagation(); return; }
+      if (portalEl._portalShortTapped) { portalEl._portalShortTapped = false; e.preventDefault(); e.stopPropagation(); return; }
       if (e.target.closest && e.target.closest(".map-portal-pin")) return;
       portalEl.classList.toggle("is-open");
       layoutMapPortal();
@@ -363,6 +437,17 @@ function renderMapEntry() {
   });
 }
 renderMapEntry();
+initMapPortal();
+window.addEventListener('load', scheduleMapPortalRelayout);
+var mapImgEl = document.querySelector('.map-image');
+if (mapImgEl) {
+  if (mapImgEl.complete) scheduleMapPortalRelayout();
+  else mapImgEl.addEventListener('load', scheduleMapPortalRelayout);
+}
+window.addEventListener('resize', layoutMapPortal);
+window.addEventListener('orientationchange', function() { setTimeout(scheduleMapPortalRelayout, 120); });
+window.addEventListener('pageshow', function() { scheduleMapPortalRelayout(); });
+if (window.visualViewport) window.visualViewport.addEventListener('resize', scheduleMapPortalRelayout);
 </script>
 </body>
 </html>

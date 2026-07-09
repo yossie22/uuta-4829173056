@@ -1783,7 +1783,7 @@ data.scenes.forEach(function(scene) {
 });
 
 // ビルド識別（どのファイルが実行されているか確認用）
-var BUILD_STAMP = '2026-07-09-ios2';
+var BUILD_STAMP = '2026-07-09-ios3';
 var guideVideoPreloadBySrc = {};
 var guideVideoSessionDone = {};
 console.log('🧩 viewer build:', BUILD_STAMP);
@@ -9990,9 +9990,11 @@ window.goToMap = function() {
   stopAllBGM();
   var back = urlParams.get('back') || 'map.html';
   try {
-    location.href = new URL(back, window.location.href).href;
+    var backUrl = new URL(back, window.location.href);
+    if (!backUrl.searchParams.get('v')) backUrl.searchParams.set('v', BUILD_STAMP);
+    location.href = backUrl.href;
   } catch (e0) {
-    location.href = 'map.html';
+    location.href = 'map.html?v=' + encodeURIComponent(BUILD_STAMP);
   }
 };
 

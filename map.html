@@ -6,6 +6,18 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
+<script>
+(function() {
+  var MAP_BUILD = '2026-07-09-ios3';
+  try {
+    var p = new URLSearchParams(location.search);
+    if (p.get('v') !== MAP_BUILD) {
+      p.set('v', MAP_BUILD);
+      location.replace(location.pathname + '?' + p.toString() + location.hash);
+    }
+  } catch (e) {}
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -113,7 +125,7 @@ var MAP_PORTAL = {
   anchorX: 97, anchorY: 82,
   phoneAnchorX: 97, phoneAnchorY: 82
 };
-var VIEWER_BUILD = '2026-07-09-ios2';
+var VIEWER_BUILD = '2026-07-09-ios3';
 function mapPortalAssetUrl(file) {
   var s = String(file || '');
   if (!s) return s;
