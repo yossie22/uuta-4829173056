@@ -1822,7 +1822,7 @@ data.scenes.forEach(function(scene) {
 });
 
 // ビルド識別（どのファイルが実行されているか確認用）
-var BUILD_STAMP = '2026-07-09-ios6';
+var BUILD_STAMP = '2026-07-09-ios7';
 var guideVideoPreloadBySrc = {};
 var guideVideoSessionDone = {};
 console.log('🧩 viewer build:', BUILD_STAMP);
@@ -4963,6 +4963,16 @@ function flatImageMediaUrl(src) {
   return s;
 }
 
+function handleFlatImageLoadFailure(failedSceneId) {
+  console.error('❌ 2D画像シーンを表示できません:', failedSceneId);
+  hideSceneFlatImage(true);
+  if (urlParams.get('back')) {
+    if (typeof window.goToMap === 'function') window.goToMap();
+    return;
+  }
+  console.warn('⚠️ flatImage の読込に失敗しました。source_panos を確認してください。');
+}
+
 function showSceneFlatImage(sd, sceneId, opts) {
   opts = opts || {};
   var src = resolveSceneFlatImageSrc(sd);
@@ -5006,10 +5016,7 @@ function showSceneFlatImage(sd, sceneId, opts) {
 
   function onFlatImageFailed(url) {
     console.error('❌ 2D画像を読み込めません:', url);
-    hideSceneFlatImage(true);
-    if (scenesData['0-aa001'] && sceneId !== '0-aa001') {
-      switchScene('0-aa001');
-    }
+    handleFlatImageLoadFailure(sceneId);
   }
 
   function clearFlatImageLoadTimer() {
@@ -8100,9 +8107,7 @@ function switchScene(sceneId, yaw, pitch, fov, fromPortalHotspot, keepFullscreen
       }
     }
     if (!showSceneFlatImage(obj.data, sceneId, { fromPortal: fromPortalHotspot })) {
-      if (scenesData['0-aa001'] && sceneId !== '0-aa001') {
-        switchScene('0-aa001', yaw, pitch, fov, fromPortalHotspot, keepFullscreenOverlay);
-      }
+      handleFlatImageLoadFailure(sceneId);
       return;
     }
     var textElFlat = document.getElementById('sceneText');
@@ -10735,7 +10740,8 @@ console.log('🔵 IIFE外 urlParams:', urlParams.toString());
 console.log('🔵 IIFE外 urlParams.get("id"):', urlParams.get('id'));
 console.log('🔵 About to call switchScene with id:', urlParams.get('id') || '0-aa001');
 
-switchScene(urlParams.get('id') || '0-aa001');
+var initialSceneId = resolveSceneId(urlParams.get('id')) || urlParams.get('id') || '0-aa001';
+switchScene(initialSceneId);
 
 }
 </script>
