@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <script>
 (function() {
-  var VIEWER_BUILD = '2026-07-09-ios9';
+  var VIEWER_BUILD = '2026-07-09-ios10';
   try {
     var p = new URLSearchParams(location.search);
     if (p.get('v') !== VIEWER_BUILD || !p.get('t')) {
@@ -1835,7 +1835,7 @@ data.scenes.forEach(function(scene) {
 });
 
 // ビルド識別（どのファイルが実行されているか確認用）
-var BUILD_STAMP = '2026-07-09-ios9';
+var BUILD_STAMP = '2026-07-09-ios10';
 var guideVideoPreloadBySrc = {};
 var guideVideoSessionDone = {};
 console.log('🧩 viewer build:', BUILD_STAMP);
@@ -8596,11 +8596,10 @@ function updateUI() {
   var sceneId = currentSceneObj ? currentSceneObj.data.id : null;
   var junctionCfg = sceneId ? getSideBranchSceneConfig(sceneId) : null;
   var junctionVis = getJunctionYellowLayout(junctionCfg);
-  var allowDefaultLateral = ccChainIndexForSceneId(sceneId) != null;
   var showUp = junctionVis ? junctionVis.up : isVert;
   var showDown = junctionVis ? junctionVis.down : isVert;
-  var showLeft = junctionVis ? junctionVis.left : (allowDefaultLateral && !isVert);
-  var showRight = junctionVis ? junctionVis.right : (allowDefaultLateral && !isVert);
+  var showLeft = junctionVis ? junctionVis.left : !isVert;
+  var showRight = junctionVis ? junctionVis.right : !isVert;
   document.getElementById('arrowUp').style.visibility = showUp ? 'visible' : 'hidden';
   document.getElementById('arrowDown').style.visibility = showDown ? 'visible' : 'hidden';
   document.getElementById('arrowLeft').style.visibility = showLeft ? 'visible' : 'hidden';

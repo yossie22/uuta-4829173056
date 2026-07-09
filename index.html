@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0" />
 <script>
 (function() {
-  var MAP_BUILD = '2026-07-09-ios9';
+  var MAP_BUILD = '2026-07-09-ios10';
   try {
     var p = new URLSearchParams(location.search);
     if (p.get('v') !== MAP_BUILD) {
@@ -125,7 +125,7 @@ var MAP_PORTAL = {
   anchorX: 97, anchorY: 82,
   phoneAnchorX: 97, phoneAnchorY: 82
 };
-var VIEWER_BUILD = '2026-07-09-ios9';
+var VIEWER_BUILD = '2026-07-09-ios10';
 function buildViewerUrl(sceneId, backPath) {
   var url = './viewer.html?id=' + encodeURIComponent(sceneId);
   if (SIDE_BRANCHES.length > 0) {

@@ -4,7 +4,7 @@
   function cfg() { return global.MAP_PORTAL || null; }
 
   function viewerBuild() {
-    return global.VIEWER_BUILD || '2026-07-09-ios9';
+    return global.VIEWER_BUILD || '2026-07-09-ios10';
   }
 
   function buildViewerUrl(sceneId, backPath) {
