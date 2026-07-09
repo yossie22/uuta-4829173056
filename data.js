@@ -1183,7 +1183,7 @@ var APP_DATA = {
       "label": "ポータル先",
       "descText": "",
       "mapImage": "map_portal.jpg",
-      "markImage": "portal.png",
+      "markImage": "portal_512.png",
       "sceneId": "21-bb001",
       "pinName": "霊山",
       "pinColor": "#00cc44",
