@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0" />
 <script>
 (function() {
-  var MAP_BUILD = '2026-07-09-ios3';
+  var MAP_BUILD = '2026-07-09-ios4';
   try {
     var p = new URLSearchParams(location.search);
     if (p.get('v') !== MAP_BUILD) {
@@ -117,7 +117,7 @@ var MAP_PORTAL = {
   mapImage: 'map_portal.jpg',
   fullMapPage: 'map_portal.html',
   sceneId: '21-bb001',
-  pinName: '霊山',
+  pinName: '',
   pinColor: '#00cc44',
   pinX: 56.87, pinY: 12.69,
   lat: 33.214137, lng: 131.669191, heading: 190,
@@ -125,7 +125,7 @@ var MAP_PORTAL = {
   anchorX: 97, anchorY: 82,
   phoneAnchorX: 97, phoneAnchorY: 82
 };
-var VIEWER_BUILD = '2026-07-09-ios3';
+var VIEWER_BUILD = '2026-07-09-ios4';
 function mapPortalAssetUrl(file) {
   var s = String(file || '');
   if (!s) return s;
@@ -304,7 +304,10 @@ function initMapPortal() {
     mapEl.src = mapPortalAssetUrl(MAP_PORTAL.mapImage);
   }
   if (pinEl) {
-    pinEl.innerHTML = '<div class="pin-label">' + (MAP_PORTAL.pinName || '') + '</div><div class="pin-icon" style="background:' + (MAP_PORTAL.pinColor || '#00cc44') + ';"><span class="pin-number">P</span></div>';
+    var labelHtml = MAP_PORTAL.pinName
+      ? '<div class="pin-label">' + MAP_PORTAL.pinName + '</div>'
+      : '';
+    pinEl.innerHTML = labelHtml + '<div class="pin-icon" style="background:' + (MAP_PORTAL.pinColor || '#00cc44') + ';"><span class="pin-number">P</span></div>';
     layoutMapPortalPin();
     function openPortalScene(e) {
       if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -349,23 +352,7 @@ var PINS = [
   { lat: 42.3524, lng: 86.7972, name: 'aa021', sceneId: '20-aa021', color: '#00ff80', heading: 59 }
 ];
 
-var SIDE_BRANCHES = [
-  {
-    "sceneId": "11-aa012",
-    "type": "branch",
-    "target": "20-bb001",
-    "forwardDir": "right",
-    "rightDir": "up",
-    "leftDir": "down",
-    "backDir": "left",
-    "entryYaw": {
-      "right": -90,
-      "up": 0,
-      "left": 90,
-      "down": 180
-    }
-  }
-];
+var SIDE_BRANCHES = [];
 
 function spreadPinPositions(pins) {
   var positions = pins.map(function(pin) { return { pin: pin, pos: gpsToPercent(pin.lat, pin.lng) }; });

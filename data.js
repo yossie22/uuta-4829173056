@@ -1185,7 +1185,7 @@ var APP_DATA = {
       "mapImage": "map_portal.jpg",
       "markImage": "portal_512.png",
       "sceneId": "21-bb001",
-      "pinName": "霊山",
+      "pinName": "",
       "pinColor": "#00cc44",
       "pinX": 56.87,
       "pinY": 12.69,
@@ -1219,7 +1219,7 @@ var APP_DATA = {
       "pins": [
         {
           "sceneId": "21-bb001",
-          "name": "霊山",
+          "name": "",
           "color": "#00cc44",
           "pinX": 56.87,
           "pinY": 12.69,

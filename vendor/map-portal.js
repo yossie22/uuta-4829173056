@@ -13,7 +13,7 @@
       url += '&sideBranches=' + encodeURIComponent(JSON.stringify(branches));
     }
     url += '&back=' + encodeURIComponent(global.MAP_PORTAL_BACK || './map.html');
-    url += '&v=2026-07-09-ios3';
+    url += '&v=2026-07-09-ios4';
     global.location.href = url;
   }
 

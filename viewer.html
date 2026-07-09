@@ -1783,7 +1783,7 @@ data.scenes.forEach(function(scene) {
 });
 
 // ビルド識別（どのファイルが実行されているか確認用）
-var BUILD_STAMP = '2026-07-09-ios3';
+var BUILD_STAMP = '2026-07-09-ios4';
 var guideVideoPreloadBySrc = {};
 var guideVideoSessionDone = {};
 console.log('🧩 viewer build:', BUILD_STAMP);
@@ -10380,12 +10380,16 @@ function playSceneBGM(sceneId) {
 
   var explicit = getExplicitBgmItems(sceneObj.data);
   if (explicit && explicit.length) {
-    startItems(mergeSceneBgmItems(explicit, getCourseBgmItems(sceneObj.data)));
+    startItems(explicit);
     return;
   }
 
   resolveAutoSceneBgmItems(sceneObj.data).then(function(autoItems) {
-    startItems(mergeSceneBgmItems(autoItems, getCourseBgmItems(sceneObj.data)));
+    if (autoItems && autoItems.length) {
+      startItems(autoItems);
+      return;
+    }
+    startItems(getCourseBgmItems(sceneObj.data));
   });
 }
 

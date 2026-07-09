@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0" />
 <script>
 (function() {
-  var MAP_BUILD = '2026-07-09-ios3';
+  var MAP_BUILD = '2026-07-09-ios4';
   try {
     var p = new URLSearchParams(location.search);
     if (p.get('v') !== MAP_BUILD) {
@@ -79,25 +79,9 @@ var PORTAL_MAP_IMAGE = 'map_portal.jpg';
 var PORTAL_MAP_LABEL = 'ポータル先';
 var PORTAL_MAP_DESC = '';
 var PORTAL_PINS = [
-  { sceneId: '21-bb001', name: '霊山', color: '#00cc44', lat: 33.214137, lng: 131.669191, pinX: 56.87, pinY: 12.69, heading: 190 }
+  { sceneId: '21-bb001', name: '', color: '#00cc44', lat: 33.214137, lng: 131.669191, pinX: 56.87, pinY: 12.69, heading: 190 }
 ];
-var SIDE_BRANCHES = [
-  {
-    "sceneId": "11-aa012",
-    "type": "branch",
-    "target": "20-bb001",
-    "forwardDir": "right",
-    "rightDir": "up",
-    "leftDir": "down",
-    "backDir": "left",
-    "entryYaw": {
-      "right": -90,
-      "up": 0,
-      "left": 90,
-      "down": 180
-    }
-  }
-];
+var SIDE_BRANCHES = [];
 
 function spreadPortalPinPositions(pins) {
   var positions = pins.map(function(pin) { return { pin: pin, pos: pinToPercent(pin) }; });
@@ -128,7 +112,7 @@ function goToPortalPin(pin) {
   if (!pin || !pin.sceneId) return;
   var url = './viewer.html?id=' + encodeURIComponent(pin.sceneId);
   if (SIDE_BRANCHES.length > 0) url += "&sideBranches=" + encodeURIComponent(JSON.stringify(SIDE_BRANCHES));
-  url += '&back=./map_portal.html&v=2026-07-09-ios3';
+  url += '&back=./map_portal.html&v=2026-07-09-ios4';
   window.location.href = url;
 }
 
@@ -156,7 +140,7 @@ function goToPortalPin(pin) {
     el.style.left = item.pos.x + '%';
     el.style.top = item.pos.y + '%';
     el.setAttribute("data-idx", i);
-    el.innerHTML = '<div class="pin-label">' + (item.pin.name || item.pin.sceneId) + '</div><div class="pin-icon" style="background:' + (item.pin.color || '#00cc44') + ';"><span class="pin-number">' + (i + 1) + '</span></div>';
+    el.innerHTML = (item.pin.name ? '<div class="pin-label">' + item.pin.name + '</div>' : '') + '<div class="pin-icon" style="background:' + (item.pin.color || '#00cc44') + ';"><span class="pin-number">' + (i + 1) + '</span></div>';
     el.addEventListener("click", function() { goToPortalPin(PORTAL_PINS[parseInt(this.getAttribute("data-idx"), 10)]); });
     container.appendChild(el);
   });
