@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0" />
 <script>
 (function() {
-  var MAP_BUILD = '2026-07-09-ios4';
+  var MAP_BUILD = '2026-07-09-ios9';
   try {
     var p = new URLSearchParams(location.search);
     if (p.get('v') !== MAP_BUILD) {
@@ -108,12 +108,22 @@ function spreadPortalPinPositions(pins) {
   return positions;
 }
 
+var VIEWER_BUILD = '2026-07-09-ios9';
+
+function buildViewerUrl(sceneId, backPath) {
+  var url = './viewer.html?id=' + encodeURIComponent(sceneId);
+  if (SIDE_BRANCHES.length > 0) {
+    url += '&sideBranches=' + encodeURIComponent(JSON.stringify(SIDE_BRANCHES));
+  }
+  url += '&back=' + encodeURIComponent(backPath || './map_portal.html');
+  url += '&v=' + encodeURIComponent(VIEWER_BUILD);
+  url += '&t=' + Date.now();
+  return url;
+}
+
 function goToPortalPin(pin) {
   if (!pin || !pin.sceneId) return;
-  var url = './viewer.html?id=' + encodeURIComponent(pin.sceneId);
-  if (SIDE_BRANCHES.length > 0) url += "&sideBranches=" + encodeURIComponent(JSON.stringify(SIDE_BRANCHES));
-  url += '&back=./map_portal.html&v=2026-07-09-ios4';
-  window.location.href = url;
+  window.location.href = buildViewerUrl(pin.sceneId, './map_portal.html');
 }
 
 (function initBackLink() {
@@ -141,7 +151,15 @@ function goToPortalPin(pin) {
     el.style.top = item.pos.y + '%';
     el.setAttribute("data-idx", i);
     el.innerHTML = (item.pin.name ? '<div class="pin-label">' + item.pin.name + '</div>' : '') + '<div class="pin-icon" style="background:' + (item.pin.color || '#00cc44') + ';"><span class="pin-number">' + (i + 1) + '</span></div>';
-    el.addEventListener("click", function() { goToPortalPin(PORTAL_PINS[parseInt(this.getAttribute("data-idx"), 10)]); });
+    el.addEventListener('click', function() {
+      if (el._portalPinTouched) { el._portalPinTouched = false; return; }
+      goToPortalPin(PORTAL_PINS[parseInt(this.getAttribute('data-idx'), 10)]);
+    });
+    el.addEventListener('touchend', function(e) {
+      el._portalPinTouched = true;
+      e.preventDefault();
+      goToPortalPin(PORTAL_PINS[parseInt(this.getAttribute('data-idx'), 10)]);
+    });
     container.appendChild(el);
   });
 })();

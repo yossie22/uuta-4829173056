@@ -2,6 +2,19 @@
 <html>
 <head>
 <meta charset="utf-8">
+<script>
+(function() {
+  var VIEWER_BUILD = '2026-07-09-ios9';
+  try {
+    var p = new URLSearchParams(location.search);
+    if (p.get('v') !== VIEWER_BUILD || !p.get('t')) {
+      p.set('v', VIEWER_BUILD);
+      if (!p.get('t')) p.set('t', String(Date.now()));
+      location.replace(location.pathname + '?' + p.toString() + location.hash);
+    }
+  } catch (e) {}
+})();
+</script>
 <title>万年山VR</title>
 <meta name="viewport" content="target-densitydpi=device-dpi, width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, minimal-ui" />
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -1822,7 +1835,7 @@ data.scenes.forEach(function(scene) {
 });
 
 // ビルド識別（どのファイルが実行されているか確認用）
-var BUILD_STAMP = '2026-07-09-ios7';
+var BUILD_STAMP = '2026-07-09-ios9';
 var guideVideoPreloadBySrc = {};
 var guideVideoSessionDone = {};
 console.log('🧩 viewer build:', BUILD_STAMP);
@@ -4827,6 +4840,23 @@ function resolveSceneFlatImageSrc(sd) {
 
 function sceneUsesFlatImage(sd) {
   return !!resolveSceneFlatImageSrc(sd);
+}
+
+function ensureFlatImageSceneRegistered(sceneId) {
+  if (!sceneId || scenesData[sceneId]) return scenesData[sceneId] || null;
+  var scenes = (data && data.scenes) || [];
+  for (var i = 0; i < scenes.length; i++) {
+    var sd = scenes[i];
+    if (!sd || sd.id !== sceneId || !sceneUsesFlatImage(sd)) continue;
+    scenesData[sceneId] = {
+      scene: null,
+      view: null,
+      data: Object.assign({}, sd, { direction: sd.direction }),
+      isFlatImageScene: true
+    };
+    return scenesData[sceneId];
+  }
+  return null;
 }
 
 function resolveFlatImageReturnScene(sd, sceneId) {
@@ -8054,9 +8084,15 @@ function collectImageHotspotsForScene(sceneId) {
 function switchScene(sceneId, yaw, pitch, fov, fromPortalHotspot, keepFullscreenOverlay) {
   if (window.sceneGyro) window.sceneGyro.stop();
   if (embedShadowMode) stopShadowEmbedOverlayTracking();
+  if (sceneId) sceneId = resolveSceneId(sceneId) || sceneId;
   var obj = scenesData[sceneId];
+  if (!obj) obj = ensureFlatImageSceneRegistered(sceneId);
   if (!obj) {
     console.error('❌ シーンが data.js にありません:', sceneId);
+    if (urlParams.get('back') && typeof window.goToMap === 'function') {
+      window.goToMap();
+      return;
+    }
     if (sceneId && scenesData['0-aa001'] && sceneId !== '0-aa001') {
       console.warn('⚠️ 代わりに 0-aa001 を開きます。data.js と tiles1024/' + sceneId + '/ を確認してください。');
       switchScene('0-aa001', yaw, pitch, fov, fromPortalHotspot, keepFullscreenOverlay);

@@ -3,18 +3,27 @@
 
   function cfg() { return global.MAP_PORTAL || null; }
 
-  function goToPortalScene(sceneId) {
-    var p = cfg();
-    var sid = sceneId || (p && p.sceneId);
-    if (!sid) return;
-    var url = './viewer.html?id=' + encodeURIComponent(sid);
+  function viewerBuild() {
+    return global.VIEWER_BUILD || '2026-07-09-ios9';
+  }
+
+  function buildViewerUrl(sceneId, backPath) {
+    var url = './viewer.html?id=' + encodeURIComponent(sceneId);
     var branches = global.SIDE_BRANCHES;
     if (branches && branches.length > 0) {
       url += '&sideBranches=' + encodeURIComponent(JSON.stringify(branches));
     }
-    url += '&back=' + encodeURIComponent(global.MAP_PORTAL_BACK || './map.html');
-    url += '&v=2026-07-09-ios4';
-    global.location.href = url;
+    url += '&back=' + encodeURIComponent(backPath || global.MAP_PORTAL_BACK || './map.html');
+    url += '&v=' + encodeURIComponent(viewerBuild());
+    url += '&t=' + Date.now();
+    return url;
+  }
+
+  function goToPortalScene(sceneId) {
+    var p = cfg();
+    var sid = sceneId || (p && p.sceneId);
+    if (!sid) return;
+    global.location.href = buildViewerUrl(sid, global.MAP_PORTAL_BACK || './map.html');
   }
 
   function goToPortalMap() {
@@ -218,7 +227,17 @@
     if (pinEl) {
       pinEl.innerHTML = '<div class="pin-label">' + (p.pinName || '') + '</div><div class="pin-icon" style="background:' + (p.pinColor || '#00cc44') + ';"><span class="pin-number">P</span></div>';
       layoutMapPortalPin();
-      pinEl.addEventListener('click', function(e) { e.stopPropagation(); goToPortalScene(); });
+      pinEl.addEventListener('click', function(e) {
+        if (pinEl._portalPinTouched) { pinEl._portalPinTouched = false; return; }
+        e.stopPropagation();
+        goToPortalScene();
+      });
+      pinEl.addEventListener('touchend', function(e) {
+        pinEl._portalPinTouched = true;
+        e.preventDefault();
+        e.stopPropagation();
+        goToPortalScene();
+      }, { passive: false });
     }
     scheduleMapPortalRelayout();
     bindMapPortalLongPress(portalEl);

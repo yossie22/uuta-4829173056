@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0" />
 <script>
 (function() {
-  var MAP_BUILD = '2026-07-09-ios4';
+  var MAP_BUILD = '2026-07-09-ios9';
   try {
     var p = new URLSearchParams(location.search);
     if (p.get('v') !== MAP_BUILD) {
@@ -125,7 +125,17 @@ var MAP_PORTAL = {
   anchorX: 97, anchorY: 82,
   phoneAnchorX: 97, phoneAnchorY: 82
 };
-var VIEWER_BUILD = '2026-07-09-ios4';
+var VIEWER_BUILD = '2026-07-09-ios9';
+function buildViewerUrl(sceneId, backPath) {
+  var url = './viewer.html?id=' + encodeURIComponent(sceneId);
+  if (SIDE_BRANCHES.length > 0) {
+    url += '&sideBranches=' + encodeURIComponent(JSON.stringify(SIDE_BRANCHES));
+  }
+  url += '&back=' + encodeURIComponent(backPath || './map.html');
+  url += '&v=' + encodeURIComponent(VIEWER_BUILD);
+  url += '&t=' + Date.now();
+  return url;
+}
 function mapPortalAssetUrl(file) {
   var s = String(file || '');
   if (!s) return s;
@@ -136,10 +146,7 @@ function mapPortalAssetUrl(file) {
 function goToPortalScene(sceneId) {
   var sid = sceneId || (MAP_PORTAL && MAP_PORTAL.sceneId);
   if (!sid) return;
-  var url = './viewer.html?id=' + encodeURIComponent(sid);
-  if (SIDE_BRANCHES.length > 0) url += "&sideBranches=" + encodeURIComponent(JSON.stringify(SIDE_BRANCHES));
-  url += '&back=./map.html&v=' + encodeURIComponent(VIEWER_BUILD);
-  window.location.href = url;
+  window.location.href = buildViewerUrl(sid, './map.html');
 }
 function goToPortalMap() {
   if (!MAP_PORTAL || !MAP_PORTAL.fullMapPage) return;
@@ -309,7 +316,10 @@ function initMapPortal() {
       : '';
     pinEl.innerHTML = labelHtml + '<div class="pin-icon" style="background:' + (MAP_PORTAL.pinColor || '#00cc44') + ';"><span class="pin-number">P</span></div>';
     layoutMapPortalPin();
+    var portalPinTouched = false;
     function openPortalScene(e) {
+      if (e && e.type === 'touchend') portalPinTouched = true;
+      if (e && e.type === 'click' && portalPinTouched) { portalPinTouched = false; return; }
       if (e) { e.preventDefault(); e.stopPropagation(); }
       goToPortalScene();
     }
@@ -380,13 +390,7 @@ function spreadPinPositions(pins) {
 }
 
 function goToScene(pin) {
-  var url = './viewer.html?id=' + pin.sceneId;
-  if (pin.flip) url += '&flip=1';
-  if (SIDE_BRANCHES.length > 0) {
-    url += '&sideBranches=' + encodeURIComponent(JSON.stringify(SIDE_BRANCHES));
-  }
-  url += '&back=./map.html&v=' + encodeURIComponent(VIEWER_BUILD);
-  window.location.href = url;
+  window.location.href = buildViewerUrl(pin.sceneId, './map.html') + (pin.flip ? '&flip=1' : '');
 }
 
 var container = document.getElementById('mapStage');
