@@ -113,7 +113,7 @@ function goToPortalPin(pin) {
   if (!pin || !pin.sceneId) return;
   var url = './viewer.html?id=' + encodeURIComponent(pin.sceneId);
   if (SIDE_BRANCHES.length > 0) url += "&sideBranches=" + encodeURIComponent(JSON.stringify(SIDE_BRANCHES));
-  url += '&back=./map_portal.html&v=2026-07-09-ios1';
+  url += '&back=./map_portal.html&v=2026-07-09-ios2';
   window.location.href = url;
 }
 

@@ -1783,7 +1783,7 @@ data.scenes.forEach(function(scene) {
 });
 
 // ビルド識別（どのファイルが実行されているか確認用）
-var BUILD_STAMP = '2026-07-09-ios1';
+var BUILD_STAMP = '2026-07-09-ios2';
 var guideVideoPreloadBySrc = {};
 var guideVideoSessionDone = {};
 console.log('🧩 viewer build:', BUILD_STAMP);
@@ -4696,6 +4696,7 @@ function hideFullscreenVideo(callOnEnd, instant) {
 var sceneFlatImageActive = false;
 var sceneFlatImageSceneId = null;
 var flatImageRevealAnim = null;
+var flatImageLoadTimer = null;
 
 function resolveFlatImageRevealOpts(sd) {
   var r = sd && sd.flatImageReveal;
@@ -4886,6 +4887,10 @@ function onSceneFlatImageBack() {
 function hideSceneFlatImage(instant) {
   if (!sceneFlatImageActive) return;
   stopFlatImageReveal();
+  if (flatImageLoadTimer) {
+    clearTimeout(flatImageLoadTimer);
+    flatImageLoadTimer = null;
+  }
   var overlay = document.getElementById('sceneFlatImageOverlay');
   var img = document.getElementById('sceneFlatImagePlayer');
   sceneFlatImageActive = false;
@@ -4911,6 +4916,14 @@ function hideSceneFlatImage(instant) {
   setTimeout(finish, 900);
 }
 
+function flatImageMediaUrl(src) {
+  var s = String(src || '');
+  if (!s) return s;
+  if (s.indexOf('?') < 0) s += '?v=' + encodeURIComponent(BUILD_STAMP);
+  else s += '&v=' + encodeURIComponent(BUILD_STAMP);
+  return s;
+}
+
 function showSceneFlatImage(sd, sceneId, opts) {
   opts = opts || {};
   var src = resolveSceneFlatImageSrc(sd);
@@ -4928,7 +4941,15 @@ function showSceneFlatImage(sd, sceneId, opts) {
   sceneFlatImageActive = true;
   sceneFlatImageSceneId = sceneId;
   document.body.classList.add('scene-flat-image-active');
-  img.onload = function() {
+  overlay.classList.remove('is-visible');
+  updateSceneFlatImageBackBtn(sd, sceneId);
+  console.log('🖼 2D画像シーン表示:', sceneId, '→', src);
+
+  var attempt = 0;
+  var maxAttempts = 3;
+
+  function onFlatImageReady() {
+    if (!sceneFlatImageActive || sceneFlatImageSceneId !== sceneId) return;
     overlay.classList.add('is-active');
     overlay.setAttribute('aria-hidden', 'false');
     var revealOpts = resolveFlatImageRevealOpts(sd);
@@ -4942,20 +4963,55 @@ function showSceneFlatImage(sd, sceneId, opts) {
         overlay.classList.add('is-visible');
       });
     });
-  };
-  img.onerror = function() {
-    console.error('❌ 2D画像を読み込めません:', src);
+  }
+
+  function onFlatImageFailed(url) {
+    console.error('❌ 2D画像を読み込めません:', url);
     hideSceneFlatImage(true);
     if (scenesData['0-aa001'] && sceneId !== '0-aa001') {
       switchScene('0-aa001');
     }
-  };
-  img.alt = sd.name || sceneId || '';
-  overlay.classList.remove('is-visible');
-  img.removeAttribute('src');
-  img.src = src;
-  updateSceneFlatImageBackBtn(sd, sceneId);
-  console.log('🖼 2D画像シーン表示:', sceneId, '→', src);
+  }
+
+  function clearFlatImageLoadTimer() {
+    if (flatImageLoadTimer) {
+      clearTimeout(flatImageLoadTimer);
+      flatImageLoadTimer = null;
+    }
+  }
+
+  function tryLoadFlatImage() {
+    if (!sceneFlatImageActive || sceneFlatImageSceneId !== sceneId) return;
+    attempt += 1;
+    var url = flatImageMediaUrl(src);
+    if (attempt > 1) {
+      url += (url.indexOf('?') < 0 ? '?' : '&') + 'retry=' + attempt + '&_=' + Date.now();
+    }
+    clearFlatImageLoadTimer();
+    flatImageLoadTimer = setTimeout(function() {
+      flatImageLoadTimer = null;
+      console.warn('⚠️ 2D画像の読込が遅いため再試行します:', sceneId, 'attempt', attempt);
+      if (attempt < maxAttempts) tryLoadFlatImage();
+      else onFlatImageFailed(url);
+    }, attempt === 1 ? 25000 : 18000);
+    img.onload = function() {
+      clearFlatImageLoadTimer();
+      onFlatImageReady();
+    };
+    img.onerror = function() {
+      clearFlatImageLoadTimer();
+      console.warn('⚠️ 2D画像読込失敗 attempt', attempt, url);
+      if (attempt < maxAttempts) {
+        setTimeout(tryLoadFlatImage, 500);
+        return;
+      }
+      onFlatImageFailed(url);
+    };
+    img.alt = sd.name || sceneId || '';
+    img.src = url;
+  }
+
+  tryLoadFlatImage();
   return true;
 }
 
