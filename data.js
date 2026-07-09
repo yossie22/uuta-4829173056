@@ -1187,23 +1187,24 @@ var APP_DATA = {
       "sceneId": "21-bb001",
       "pinName": "霊山",
       "pinColor": "#00cc44",
-      "pinX": 40.3,
-      "pinY": 40.5,
+      "pinX": 56.87,
+      "pinY": 12.69,
       "mapOffsetX": 0,
       "mapOffsetY": 0,
       "fullMapPage": "map_portal.html",
       "bounds": {
         "topLeft": {
-          "lat": 33.502,
-          "lng": 131.268
+          "lat": 33.21447,
+          "lng": 131.665835
         },
         "bottomRight": {
-          "lat": 33.418,
-          "lng": 131.392
+          "lat": 33.211846,
+          "lng": 131.671736
         }
       },
-      "lat": 33.468,
-      "lng": 131.318,
+      "lat": 33.214137,
+      "lng": 131.669191,
+      "heading": 190,
       "insets": {
         "left": 0,
         "top": 0,
@@ -1220,10 +1221,11 @@ var APP_DATA = {
           "sceneId": "21-bb001",
           "name": "霊山",
           "color": "#00cc44",
-          "pinX": 40.3,
-          "pinY": 40.5,
-          "lat": 33.468,
-          "lng": 131.318
+          "pinX": 56.87,
+          "pinY": 12.69,
+          "lat": 33.214137,
+          "lng": 131.669191,
+          "heading": 190
         }
       ]
     }
